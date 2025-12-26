@@ -1,6 +1,10 @@
-import axios from "axios";
+import api from "./api";
 
-baseURL:`${process.env.REACT_APP_API_URL}/api/`
-
-export const registerUser = (data) => axios.post(`${BASE_URL}/register`, data);
-export const loginUser = (data) => axios.post(`${BASE_URL}/login`, data);
+export const registerUser = async (data) => {
+  const response = await api.post('/auth/register', data);
+  return response;
+};
+export const loginUser = async(data) =>{
+    const response= await api.post('/auth/login',data);
+    return response
+}

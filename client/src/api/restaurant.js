@@ -1,56 +1,42 @@
-import axios from "axios";
-
-const API = axios.create({
-  baseURL:`${process.env.REACT_APP_API_URL}/api/`
-});
-
-API.interceptors.request.use((req) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    req.headers.Authorization = `Bearer ${token}`;
-  }
-  return req;
-});
+import api from "./api";
 
 export const createRestaurant = (data) =>
-  API.post("/owner/restaurant", data);
+  api.post("/owner/restaurant", data);
 
 export const getMyRestaurant = () =>
-  API.get("/owner/restaurant");
+  api.get("/owner/restaurant");
 
 export const updateRestaurant = (data) =>
-  API.put("/owner/restaurant", data);
+  api.put("/owner/restaurant", data);
 
 export const getRestaurants = (params = {}) =>
-  API.get("/restaurants", { params });
+  api.get("/restaurants", { params });
 
 export const getRestaurantById = (id) =>
-  API.get(`/restaurants/${id}`);
+  api.get(`/restaurants/${id}`);
 
 export const getNearbyRestaurants = (params) =>
-  API.get("/restaurants/nearby", { params });
-
-
+  api.get("/restaurants/nearby", { params });
 export const addMenuItem = (data) =>
-  API.post("/owner/menu", data);
+  api.post("/owner/menu", data);
 
 export const getMenuItems = () =>
-  API.get("/owner/menu");
+  api.get("/owner/menu");
 
 export const updateMenuItem = (id, data) =>
-  API.put(`/owner/menu/${id}`, data);
+  api.put(`/owner/menu/${id}`, data);
 
 export const deleteMenuItem = (id) =>
-  API.delete(`/owner/menu/${id}`);
+  api.delete(`/owner/menu/${id}`);
 
 export const addToFavorites = (data) =>
-  API.post("/favorites", data);
+  api.post("/favorites", data);
 
 export const removeFromFavorites = (type, itemId) =>
-  API.delete(`/favorites/${type}/${itemId}`);
+  api.delete(`/favorites/${type}/${itemId}`);
 
 export const getUserFavorites = () =>
-  API.get("/favorites");
+  api.get("/favorites");
 
 export const checkFavoriteStatus = (type, itemId) =>
-  API.get(`/favorites/check/${type}/${itemId}`);
+  api.get(`/favorites/check/${type}/${itemId}`);

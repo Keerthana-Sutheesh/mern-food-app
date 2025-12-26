@@ -1,7 +1,6 @@
-// api/feedback.js
+
 import api from './api';
 
-// Submit comprehensive feedback
 export const submitFeedback = async (feedbackData) => {
   const response = await api.post('/feedbacks', feedbackData);
   return response;

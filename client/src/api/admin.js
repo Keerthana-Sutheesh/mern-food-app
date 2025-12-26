@@ -1,28 +1,18 @@
-import axios from "axios";
+import api from "./api";
 
-const API = axios.create({
-  baseURL:`${process.env.REACT_APP_API_URL}/api/`
-});
 
-API.interceptors.request.use((req) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    req.headers.Authorization = `Bearer ${token}`;
-  }
-  return req;
-});
 
 export const getAdminStats = () =>
-  API.get("/admin/stats");
+  api.get("/admin/stats");
 
 export const getAllRestaurants = () =>
-  API.get("/admin/restaurants");
+  api.get("/admin/restaurants");
 
 export const updateRestaurantStatus = (id, data) =>
-  API.put(`/admin/restaurants/${id}/status`, data);
+  api.put(`/admin/restaurants/${id}/status`, data);
 
 export const getAllUsers = () =>
-  API.get("/admin/users");
+  api.get("/admin/users");
 
 export const updateUserRole = (id, data) =>
-  API.put(`/admin/users/${id}/role`, data);
+  api.put(`/admin/users/${id}/role`, data);
