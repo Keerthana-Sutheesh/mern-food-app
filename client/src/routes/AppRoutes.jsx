@@ -6,7 +6,6 @@ import NotAuthorized from "../pages/NotAuthorized";
 import ProtectedRoute from "../components/ProtectedRoute";
 import AdminDashboard from "../pages/Admin/AdminDashboard";
 import OwnerDashboard from "../pages/Owner/OwnerDashboard";
-import OwnerRoute from "./OwnerRoute";
 import CreateRestaurant from "../pages/CreateRestaurant";
 import RestaurantDetails from "../pages/RestaurantDetails";
 import Cart from "../pages/Cart";
@@ -133,13 +132,13 @@ export default function AppRoutes() {
         }
       />
       <Route
-        path="/owner/create-restaurant"
-        element={
-          <OwnerRoute>
-            <CreateRestaurant />
-          </OwnerRoute>
-        }
-      />
+  path="/owner/create-restaurant"
+  element={
+    <ProtectedRoute allowedRoles={["owner"]}>
+      <CreateRestaurant />
+    </ProtectedRoute>
+  }
+/>
       <Route path="/not-authorized" element={<NotAuthorized />} />
     </Routes>
   );
