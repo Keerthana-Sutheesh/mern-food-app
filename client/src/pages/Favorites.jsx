@@ -113,7 +113,7 @@ export default function Favorites() {
                       <span>₹{restaurant.deliveryFee} delivery</span>
                     </div>
                     <Link
-                      to={`/restaurant/${restaurant._id}`}
+                      to={`/restaurant/${restaurant._id?.toString()}`}
                       className="w-full bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600 transition text-center block"
                     >
                       View Menu
@@ -171,7 +171,7 @@ export default function Favorites() {
                       )}
                     </div>
                     <Link
-                      to={`/restaurant/${item.restaurant}`}
+                      to={`/restaurant/${item.restaurant?.toString()}`}
                       className="w-full bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600 transition text-center block disabled:bg-gray-300"
                     >
                       View in Restaurant

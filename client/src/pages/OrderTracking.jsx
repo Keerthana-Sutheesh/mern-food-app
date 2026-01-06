@@ -119,7 +119,7 @@ export default function OrderTracking() {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="mb-6 flex gap-4">
           <Link
-            to={`/restaurant/${order.restaurant._id}`}
+            to={`/restaurant/${order.restaurant._id?.toString()}`}
             className="text-orange-500 hover:text-orange-600 font-medium"
           >
             ← Back to Restaurant

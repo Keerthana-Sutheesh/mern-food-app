@@ -26,6 +26,10 @@ const ownerRoutes = require("./routes/owner");
 const favoritesRoutes = require("./routes/favorites");
 const userRoutes = require("./routes/user");
 
+app.get("/", (req, res) => {
+  res.status(200).send("Server running successfully");
+});
+
 app.use("/api/admin", adminRoutes);
 app.use("/api/owner", ownerRoutes);
 app.use("/api/favorites", favoritesRoutes);

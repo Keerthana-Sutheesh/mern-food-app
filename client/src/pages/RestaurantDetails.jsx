@@ -26,6 +26,8 @@ export default function RestaurantDetails() {
 
   useEffect(() => {
     const fetchRestaurantData = async () => {
+      if (!id) return; 
+      
       try {
         setLoading(true);
         const res = await getRestaurantById(id);
@@ -79,7 +81,7 @@ export default function RestaurantDetails() {
 
   useEffect(() => {
     const fetchOrder = async () => {
-      if (!user || !id || isOwner) return;
+      if (!user || !id || isOwner || typeof id !== 'string') return;
       try {
         const res = await api.get(`/orders/current/${id}`);
         setCurrentOrder(res.data);
@@ -88,7 +90,9 @@ export default function RestaurantDetails() {
         setCurrentOrder(null);
       }
     };
-    fetchOrder();
+    if (user && id && typeof id === 'string' && !isOwner) {
+      fetchOrder();
+    }
   }, [id, user, isOwner]);
 
   const handleAddToCart = (item) => {
@@ -214,7 +218,7 @@ export default function RestaurantDetails() {
                     disabled={!item.isAvailable}
                     className="w-full bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 transition disabled:bg-gray-300"
                   >
-                    {item.isAvailable ? 'Add to Cart' : 'Out of Stock'}
+                    {item.customizationOptions && item.customizationOptions.length > 0 ? 'Customize & Add to Cart' : 'Add to Cart'}
                   </button>
                 </div>
               ))}
@@ -243,7 +247,6 @@ export default function RestaurantDetails() {
         )}
       </div>
 
-      {/* Customization Modal */}
       {customizingItem && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
@@ -309,9 +312,17 @@ export default function RestaurantDetails() {
             <div className="flex gap-2 mt-6">
               <button
                 onClick={() => {
+                  const customizationsArray = Object.entries(customizations)
+                    .filter(([_, value]) => value !== '' && value !== false)
+                    .map(([name, value]) => ({
+                      name,
+                      value: String(value),
+                      price: 0 
+                    }));
+
                   handleAddToCart({
                     ...customizingItem,
-                    customizations,
+                    customizations: customizationsArray,
                     specialInstructions
                   });
                   setCustomizingItem(null);

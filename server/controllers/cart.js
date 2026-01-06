@@ -14,7 +14,7 @@ exports.getCart = async (req, res) => {
 
 exports.addToCart = async (req, res) => {
   try {
-    const { menuItemId, quantity } = req.body;
+    const { menuItemId, quantity, customizations, specialInstructions } = req.body;
 
     const menuItem = await MenuItem.findById(menuItemId);
     if (!menuItem || !menuItem.available) {
@@ -30,18 +30,33 @@ exports.addToCart = async (req, res) => {
       });
     }
 
-    const existingItem = cart.items.find(
-      item => item.menuItem.toString() === menuItemId
-    );
-
-    if (existingItem) {
-      existingItem.quantity += quantity;
-    } else {
+ 
+    if (customizations && customizations.length > 0) {
       cart.items.push({
         menuItem: menuItemId,
         quantity,
-        price: menuItem.price
+        price: menuItem.price,
+        customizations: customizations || [],
+        specialInstructions: specialInstructions || ''
       });
+    } else {
+     
+      const existingItem = cart.items.find(
+        item => item.menuItem.toString() === menuItemId && 
+               (!item.customizations || item.customizations.length === 0)
+      );
+
+      if (existingItem) {
+        existingItem.quantity += quantity;
+      } else {
+        cart.items.push({
+          menuItem: menuItemId,
+          quantity,
+          price: menuItem.price,
+          customizations: [],
+          specialInstructions: ''
+        });
+      }
     }
 
     await cart.save();

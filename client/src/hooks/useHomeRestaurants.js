@@ -28,7 +28,15 @@ export function useHomeRestaurants(user) {
         Object.entries(filters).filter(([_, v]) => v)
       );
 
-      const res = await getRestaurants(params);
+
+      const apiParams = {
+        ...params,
+        cuisine: params.selectedCuisine,
+        selectedCuisine: undefined
+      };
+      delete apiParams.selectedCuisine;
+
+      const res = await getRestaurants(apiParams);
       const data = res.data.data;
       setRestaurants(data);
 

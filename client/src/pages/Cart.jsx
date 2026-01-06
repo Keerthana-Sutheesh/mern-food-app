@@ -115,40 +115,67 @@ export default function Cart() {
           {cartItems.map((item) => (
             <div
               key={item.cartId || item._id}
-              className="bg-white p-4 rounded-lg flex justify-between items-center"
+              className="bg-white p-4 rounded-lg"
             >
-              <div>
-                <h4 className="font-medium">{item.name}</h4>
-                <p className="text-gray-600">₹{item.price}</p>
-              </div>
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <h4 className="font-medium">{item.name}</h4>
+                  <p className="text-gray-600">₹{item.price}</p>
+                  
+                  {/* Display customizations */}
+                  {item.customizations && item.customizations.length > 0 && (
+                    <div className="mt-2 text-sm text-gray-600">
+                      <p className="font-medium">Customizations:</p>
+                      <ul className="list-disc list-inside ml-2">
+                        {item.customizations.map((cust, idx) => (
+                          <li key={idx}>
+                            {cust.name}: {cust.value}
+                            {cust.price > 0 && ` (+₹${cust.price})`}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  
+                  
+                  {item.specialInstructions && (
+                    <div className="mt-2 text-sm text-gray-600">
+                      <p className="font-medium">Special Instructions:</p>
+                      <p className="italic">{item.specialInstructions}</p>
+                    </div>
+                  )}
+                </div>
 
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() =>
-                    updateQuantity(item.cartId || item._id, item.quantity - 1)
-                  }
-                >
-                  -
-                </button>
-                <span>{item.quantity}</span>
-                <button
-                  onClick={() =>
-                    updateQuantity(item.cartId || item._id, item.quantity + 1)
-                  }
-                >
-                  +
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() =>
+                      updateQuantity(item.cartId || item._id, item.quantity - 1)
+                    }
+                    className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center"
+                  >
+                    -
+                  </button>
+                  <span className="w-8 text-center">{item.quantity}</span>
+                  <button
+                    onClick={() =>
+                      updateQuantity(item.cartId || item._id, item.quantity + 1)
+                    }
+                    className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center"
+                  >
+                    +
+                  </button>
 
-                <span className="font-semibold w-16 text-right">
-                  ₹{item.price * item.quantity}
-                </span>
+                  <span className="font-semibold w-16 text-right">
+                    ₹{item.price * item.quantity}
+                  </span>
 
-                <button
-                  onClick={() => removeFromCart(item.cartId || item._id)}
-                  className="text-red-500"
-                >
-                  🗑️
-                </button>
+                  <button
+                    onClick={() => removeFromCart(item.cartId || item._id)}
+                    className="text-red-500 ml-2"
+                  >
+                    🗑️
+                  </button>
+                </div>
               </div>
             </div>
           ))}

@@ -22,7 +22,13 @@ const cartSchema = new mongoose.Schema({
       price: {
         type: Number,
         required: true
-      }
+      },
+      customizations: [{
+        name: String,
+        value: String,
+        price: { type: Number, default: 0 }
+      }],
+      specialInstructions: String
     }
   ]
 }, { timestamps: true });

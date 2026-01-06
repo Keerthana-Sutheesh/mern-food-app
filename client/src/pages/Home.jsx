@@ -99,6 +99,20 @@ export default function Home() {
             ))}
           </select>
 
+          <select
+            value={`${filters.sortBy}-${filters.sortOrder}`}
+            onChange={(e) => {
+              const [sortBy, sortOrder] = e.target.value.split('-');
+              setFilters((f) => ({ ...f, sortBy, sortOrder }));
+            }}
+            className="border px-4 py-2 rounded"
+          >
+            <option value="createdAt-desc">Newest First</option>
+            <option value="rating-desc">Highest Rated</option>
+            <option value="deliveryFee-asc">Lowest Delivery Fee</option>
+            <option value="name-asc">Name A-Z</option>
+          </select>
+
           <button
             onClick={() => setShowFilters(!showFilters)}
             className="bg-gray-200 px-4 py-2 rounded"
@@ -114,7 +128,7 @@ export default function Home() {
           {restaurants.map((r) => (
             <div
               key={r._id}
-              onClick={() => navigate(`/restaurant/${r._id}`)}
+              onClick={() => navigate(`/restaurant/${r._id.toString()}`)}
               className="bg-white p-4 rounded shadow cursor-pointer"
             >
               <div className="flex justify-between">

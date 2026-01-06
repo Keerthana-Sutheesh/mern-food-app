@@ -119,21 +119,47 @@ const OrderDetails = () => {
               {order.items.map((item, i) => (
                 <div
                   key={i}
-                  className="flex justify-between py-2 border-b last:border-none"
+                  className="py-3 border-b last:border-none"
                 >
-                  <div>
-                    <p className="font-medium">
-                      {item.menuItem?.name}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Qty: {item.quantity}
+                  <div className="flex justify-between">
+                    <div className="flex-1">
+                      <p className="font-medium">
+                        {item.menuItem?.name}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Qty: {item.quantity} × {formatCurrency(item.price)}
+                      </p>
+                      
+                  
+                      {item.customizations && item.customizations.length > 0 && (
+                        <div className="mt-2 text-sm text-gray-600">
+                          <p className="font-medium text-gray-800">Customizations:</p>
+                          <ul className="list-disc list-inside ml-2 mt-1">
+                            {item.customizations.map((cust, idx) => (
+                              <li key={idx}>
+                                {cust.name}: {cust.value}
+                                {cust.price > 0 && ` (+${formatCurrency(cust.price)})`}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                    
+                      {item.specialInstructions && (
+                        <div className="mt-2 text-sm text-gray-600">
+                          <p className="font-medium text-gray-800">Special Instructions:</p>
+                          <p className="italic mt-1">{item.specialInstructions}</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <p className="font-medium ml-4">
+                      {formatCurrency(
+                        item.price * item.quantity
+                      )}
                     </p>
                   </div>
-                  <p className="font-medium">
-                    {formatCurrency(
-                      item.price * item.quantity
-                    )}
-                  </p>
                 </div>
               ))}
 
