@@ -1,10 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
-import {
-  getRestaurants,
-  addToFavorites,
-  removeFromFavorites,
-  checkFavoriteStatus
-} from "../api/restaurant";
+import { getRestaurants } from "../api/restaurant";
+import { addToFavorites, removeFromFavorites, checkFavoriteStatus } from "../api/favorites";
 
 export function useHomeRestaurants(user) {
   const [restaurants, setRestaurants] = useState([]);

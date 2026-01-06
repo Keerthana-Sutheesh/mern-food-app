@@ -33,18 +33,37 @@ export function useOwnerRestaurant() {
     fetchRestaurantData();
   }, [fetchRestaurantData]);
 
-  const saveMenuItem = async (item, editingId) => {
-    if (editingId) {
-      await updateMenuItem(editingId, item);
-    } else {
-      await addMenuItem(item);
+  const saveMenuItem = async (menuForm, menuItemId) => {
+    const payload = {
+      ...menuForm,
+      nutritionalInfo: {
+        calories: menuForm.nutritionalInfo?.calories || 0,
+        protein: menuForm.nutritionalInfo?.protein || 0,
+        carbs: menuForm.nutritionalInfo?.carbs || 0,
+        fat: menuForm.nutritionalInfo?.fat || 0,
+        fiber: menuForm.nutritionalInfo?.fiber || 0
+      }
+    };
+
+    try {
+      if (menuItemId) {
+        await updateMenuItem(menuItemId, payload);
+      } else {
+        await addMenuItem(payload);
+      }
+      fetchRestaurantData();
+    } catch (err) {
+      console.error("Failed to save menu item", err);
     }
-    fetchRestaurantData();
   };
 
   const removeMenuItem = async (id) => {
-    await deleteMenuItem(id);
-    fetchRestaurantData();
+    try {
+      await deleteMenuItem(id);
+      fetchRestaurantData();
+    } catch (err) {
+      console.error("Failed to delete menu item", err);
+    }
   };
 
   return {

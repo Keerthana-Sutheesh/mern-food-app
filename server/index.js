@@ -17,7 +17,6 @@ connectDB();
 const authRoutes = require("./routes/auth");
 const restaurantRoutes = require('./routes/restaurant');
 const menuRoutes = require('./routes/menu');
-//const cartRoutes = require('./routes/cart');
 const orderRoutes = require('./routes/order');
 const paymentRoutes = require('./routes/payment');
 const feedbackRoutes = require('./routes/feedback');
@@ -36,12 +35,10 @@ app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use('/api/restaurants', restaurantRoutes);
 app.use('/api/menus', menuRoutes);
-//app.use('/api/carts', cartRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/feedbacks', feedbackRoutes);
 app.use('/api/delivery-schedules', deliveryScheduleRoutes);
-console.log("JWT_SECRET:", process.env.JWT_SECRET);
 const port = process.env.PORT || 3000;
 
 app.listen(port, () => {

@@ -1,4 +1,3 @@
-// components/FeedbackForm.jsx
 import { useState } from 'react';
 import { submitFeedback } from '../api/feedback';
 
@@ -58,7 +57,7 @@ const FeedbackForm = ({ orderId, onSuccess, onCancel }) => {
       <form onSubmit={handleSubmit} className="space-y-6">
        
         <div className="border-b border-gray-200 pb-6">
-          <h4 className="text-lg font-medium text-gray-900 mb-4">🍽️ Restaurant Experience</h4>
+          <h4 className="text-lg font-medium text-gray-900 mb-4"> Restaurant Experience</h4>
 
           <div className="space-y-4">
             <div>
@@ -154,7 +153,7 @@ const FeedbackForm = ({ orderId, onSuccess, onCancel }) => {
 
      
         <div>
-          <h4 className="text-lg font-medium text-gray-900 mb-4">📝 Overall Experience</h4>
+          <h4 className="text-lg font-medium text-gray-900 mb-4"> Overall Experience</h4>
 
           <div className="space-y-4">
             <div>

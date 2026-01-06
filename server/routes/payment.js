@@ -1,4 +1,3 @@
-// routes/payments.js
 const express = require('express');
 const router = express.Router();
 
@@ -17,15 +16,15 @@ const {
 } = require('../controllers/payment');
 
 
-router.post('/create-order', protect, createRazorpayOrder);
+router.post('/create-order', protect, authorize('user'), createRazorpayOrder);
 
-router.post('/verify', protect, verifyPayment);
-router.get('/saved-methods', protect, getSavedPaymentMethods);
-router.post('/saved-methods', protect, savePaymentMethod);
-router.delete('/saved-methods/:id', protect, deleteSavedPaymentMethod);
-router.put('/saved-methods/:id/default', protect, setDefaultPaymentMethod);
-router.get('/history', protect, getPaymentHistory);
-router.get('/:id/receipt', protect, getPaymentReceipt);
+router.post('/verify', protect, authorize('user'), verifyPayment);
+router.get('/saved-methods', protect, authorize('user'), getSavedPaymentMethods);
+router.post('/saved-methods', protect, authorize('user'), savePaymentMethod);
+router.delete('/saved-methods/:id', protect, authorize('user'), deleteSavedPaymentMethod);
+router.put('/saved-methods/:id/default', protect, authorize('user'), setDefaultPaymentMethod);
+router.get('/history', protect, authorize('user'), getPaymentHistory);
+router.get('/:id/receipt', protect, authorize('user'), getPaymentReceipt);
 
 router.post('/:id/refund', protect, authorize('admin'), processRefund);
 

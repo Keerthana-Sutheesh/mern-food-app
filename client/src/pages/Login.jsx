@@ -18,30 +18,27 @@ export default function Login() {
 
     try {
       const res = await loginUser({ email, password });
-      const user = res.data.user;
+      const { token, user } = res.data;
 
     
-      if (user.role !== activeTab) {
-        return setError(
-          `You are registered as "${user.role}". Please login from the correct tab.`
-        );
+      if (activeTab && activeTab !== user.role) {
+        setError(`Selected ${activeTab} portal but account role is ${user.role}. Please switch tabs or use correct credentials.`);
+        return;
       }
 
-      login(res.data.token, user);
+      login(token, user);
 
-     
-      switch (user.role) {
-        case "admin":
-          navigate("/admin");
-          break;
-        case "owner":
-          navigate("/owner");
-          break;
-        default:
-          navigate("/");
+      if (user.role === "admin") {
+        navigate("/admin");
+      } else if (user.role === "owner") {
+        navigate("/owner");
+      } else {
+        navigate("/");
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Login failed");
+      setError(
+        err.response?.data?.message || "Invalid email or password"
+      );
     }
   };
 
@@ -63,6 +60,7 @@ export default function Login() {
           Login
         </h2>
 
+    
         <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
           {["user", "owner", "admin"].map((role) => (
             <button
@@ -79,7 +77,7 @@ export default function Login() {
           ))}
         </div>
 
-   
+    
         <div className="mb-4 p-3 bg-blue-50 rounded-lg text-sm text-blue-700">
           {activeTab === "user" && (
             <p><strong>User Portal:</strong> Order food from restaurants</p>
@@ -92,7 +90,6 @@ export default function Login() {
           )}
         </div>
 
-       
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="block text-orange-500 mb-1">Email</label>

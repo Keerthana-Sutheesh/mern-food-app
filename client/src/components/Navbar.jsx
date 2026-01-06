@@ -104,17 +104,14 @@ export default function Navbar() {
                   >
                     📋 Order History
                   </button>
+                  <button
+                    onClick={() => navigate("/payments/history")}
+                    className="block w-full px-4 py-2 text-left hover:bg-gray-100"
+                  >
+                    💳 Payment History
+                  </button>
                 </>
               )}
-
-              <div className="border-t my-1" />
-
-              <button
-                onClick={() => navigate("/payments/history")}
-                className="block w-full px-4 py-2 text-left hover:bg-gray-100"
-              >
-                💳 Payment History
-              </button>
             </div>
           </div>
 

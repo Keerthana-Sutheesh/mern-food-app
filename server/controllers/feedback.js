@@ -1,344 +1,198 @@
-// controllers/feedbackController.js
+const mongoose = require('mongoose');
 const Feedback = require('../models/Feedback');
-const Order = require('../models/Order');
-const Restaurant = require('../models/Restaurant');
-const User = require('../models/User');
 
-/**
- * POST /api/feedbacks
- * Submit comprehensive feedback (restaurant + delivery)
- */
-exports.submitFeedback = async (req, res) => {
+const submitFeedback = async (req, res) => {
   try {
     const {
       orderId,
-      restaurantRating,
-      restaurantComment,
-      restaurantFeedbackType = 'overall',
-      deliveryRating,
-      deliveryComment,
-      deliveryFeedbackType = 'overall',
+      restaurantId,
       overallRating,
       overallComment,
-      images = []
+      restaurantRating,
+      deliveryRating
     } = req.body;
 
-    // Validate required fields
-    if (!overallRating || overallRating < 1 || overallRating > 5) {
-      return res.status(400).json({ message: 'Overall rating is required (1-5)' });
-    }
-
-    // Check if order exists and belongs to user
-    const order = await Order.findOne({
-      _id: orderId,
-      user: req.user.id,
-      orderStatus: 'delivered'
-    }).populate('restaurant');
-
+    const Order = require('../models/Order');
+    const order = await Order.findById(orderId);
     if (!order) {
-      return res.status(404).json({
-        message: 'Order not found or feedback not allowed (must be delivered)'
-      });
+      return res.status(404).json({ message: 'Order not found' });
+    }
+    if (order.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+    if (order.restaurant.toString() !== restaurantId) {
+      return res.status(400).json({ message: 'Order does not belong to this restaurant' });
+    }
+    if (order.orderStatus === 'cancelled') {
+      return res.status(400).json({ message: 'Cannot submit feedback for cancelled orders' });
     }
 
-    // Check if feedback already exists
     const existingFeedback = await Feedback.findOne({ order: orderId });
     if (existingFeedback) {
       return res.status(400).json({ message: 'Feedback already submitted for this order' });
     }
 
-    // Validate ratings
-    if (restaurantRating && (restaurantRating < 1 || restaurantRating > 5)) {
-      return res.status(400).json({ message: 'Restaurant rating must be between 1-5' });
-    }
-    if (deliveryRating && (deliveryRating < 1 || deliveryRating > 5)) {
-      return res.status(400).json({ message: 'Delivery rating must be between 1-5' });
-    }
-
     const feedback = await Feedback.create({
-      user: req.user.id,
       order: orderId,
-      restaurant: order.restaurant._id,
-      restaurantRating,
-      restaurantComment,
-      restaurantFeedbackType,
-      deliveryRating,
-      deliveryComment,
-      deliveryFeedbackType,
+      restaurant: restaurantId,
+      user: req.user._id,
       overallRating,
       overallComment,
-      images,
-      status: shouldAutoApprove({ restaurantComment, deliveryComment, overallComment }) ? 'approved' : 'pending'
+      restaurantRating,
+      deliveryRating,
     });
 
- 
-    await updateRestaurantRatings(order.restaurant._id);
-
-    res.status(201).json({
-      message: 'Feedback submitted successfully',
-      feedback: await feedback.populate('user', 'name')
-    });
-
+    res.status(201).json(feedback);
   } catch (error) {
-    console.error('Error submitting feedback:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error("Submit feedback error:", error);
+    res.status(500).json({ message: error.message });
   }
 };
 
-exports.getOrderFeedback = async (req, res) => {
+
+const getOrderFeedback = async (req, res) => {
   try {
-    const { orderId } = req.params;
+    const feedbacks = await Feedback.find({
+      order: req.params.orderId
+    }).populate('user', 'name');
 
-    const order = await Order.findById(orderId);
-    if (!order) {
-      return res.status(404).json({ message: 'Order not found' });
-    }
-
-    if (order.user.toString() !== req.user.id) {
-      return res.status(403).json({ message: 'Access denied' });
-    }
-
-    const feedback = await Feedback.findOne({ order: orderId })
-      .populate('user', 'name')
-      .populate('restaurant', 'name')
-      .populate('restaurantResponse.respondedBy', 'name');
-
-    if (!feedback) {
-      return res.status(404).json({ message: 'Feedback not found' });
-    }
-
-    res.status(200).json(feedback);
-  } catch (error) {
-    console.error('Error fetching order feedback:', error);
+    res.json({ feedbacks });
+  } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
 };
 
-exports.getRestaurantFeedback = async (req, res) => {
+
+const getRestaurantFeedback = async (req, res) => {
   try {
     const { restaurantId } = req.params;
-    const { page = 1, limit = 10, rating, type } = req.query;
 
-    const query = {
-      restaurant: restaurantId,
-      status: 'approved'
-    };
-
-    if (rating) {
-      query.overallRating = parseInt(rating);
-    }
-
-    if (type) {
-      query.restaurantFeedbackType = type;
-    }
-
-    const skip = (page - 1) * limit;
-
-    const feedbacks = await Feedback.find(query)
+    const feedbacks = await Feedback.find({
+      restaurant: new mongoose.Types.ObjectId(restaurantId)
+    })
       .populate('user', 'name')
-      .populate('restaurantResponse.respondedBy', 'name')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+      .sort({ createdAt: -1 });
 
-    const total = await Feedback.countDocuments(query);
-    const stats = await Feedback.aggregate([
-      { $match: { restaurant: require('mongoose').Types.ObjectId(restaurantId), status: 'approved' } },
-      {
-        $group: {
-          _id: null,
-          totalReviews: { $sum: 1 },
-          avgOverallRating: { $avg: '$overallRating' },
-          avgRestaurantRating: { $avg: '$restaurantRating' },
-          avgDeliveryRating: { $avg: '$deliveryRating' },
-          ratingDistribution: {
-            $push: '$overallRating'
-          }
-        }
-      }
-    ]);
+    const totalReviews = feedbacks.length;
+    const avgOverallRating =
+      totalReviews === 0
+        ? 0
+        : (
+            feedbacks.reduce((sum, f) => sum + (f.overallRating || 0), 0) /
+            totalReviews
+          ).toFixed(1);
 
-    const ratingStats = stats[0] || {
-      totalReviews: 0,
-      avgOverallRating: 0,
-      avgRestaurantRating: 0,
-      avgDeliveryRating: 0,
-      ratingDistribution: []
-    };
-
-
-    const distribution = [1, 2, 3, 4, 5].map(rating => ({
-      rating,
-      count: ratingStats.ratingDistribution.filter(r => r === rating).length
-    }));
-
-    res.status(200).json({
+    res.json({
       feedbacks,
       stats: {
-        ...ratingStats,
-        avgOverallRating: ratingStats.avgOverallRating?.toFixed(1) || 0,
-        avgRestaurantRating: ratingStats.avgRestaurantRating?.toFixed(1) || 0,
-        avgDeliveryRating: ratingStats.avgDeliveryRating?.toFixed(1) || 0,
-        distribution
-      },
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total,
-        pages: Math.ceil(total / limit)
+        totalReviews,
+        avgOverallRating
       }
     });
-  } catch (error) {
-    console.error('Error fetching restaurant feedback:', error);
+  } catch (err) {
+    console.error('Get restaurant feedback error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };
 
-exports.respondToFeedback = async (req, res) => {
+const respondToFeedback = async (req, res) => {
   try {
-    const { comment } = req.body;
-    const feedbackId = req.params.id;
+    const feedback = await Feedback.findById(req.params.id).populate({ path: 'restaurant', populate: { path: 'owner', select: '_id name email' } });
 
-    if (!comment || comment.trim().length === 0) {
-      return res.status(400).json({ message: 'Response comment is required' });
-    }
+    console.log('RespondToFeedback: user=', req.user._id.toString());
+    console.log('RespondToFeedback: feedback=', feedback ? feedback._id.toString() : null);
+    console.log('RespondToFeedback: restaurant=', feedback && feedback.restaurant ? feedback.restaurant._id.toString() : null);
+    console.log('RespondToFeedback: restaurant.owner=', feedback && feedback.restaurant && feedback.restaurant.owner ? feedback.restaurant.owner._id.toString() : null);
 
-    const feedback = await Feedback.findById(feedbackId).populate('restaurant');
     if (!feedback) {
       return res.status(404).json({ message: 'Feedback not found' });
     }
 
-    if (feedback.restaurant.owner.toString() !== req.user.id) {
-      return res.status(403).json({ message: 'Access denied' });
+    if (!feedback.restaurant) {
+      return res.status(400).json({ message: 'Feedback does not have associated restaurant' });
+    }
+
+    const ownerId = feedback.restaurant.owner && feedback.restaurant.owner._id ? feedback.restaurant.owner._id.toString() : feedback.restaurant.owner ? feedback.restaurant.owner.toString() : null;
+
+    if (!ownerId) {
+      return res.status(400).json({ message: 'Restaurant owner not found' });
+    }
+
+    if (ownerId !== req.user._id.toString()) {
+      console.error('Owner mismatch:', { ownerId, userId: req.user._id.toString() });
+      return res.status(403).json({ message: 'Not authorized to respond to this feedback' });
     }
 
     feedback.restaurantResponse = {
-      comment: comment.trim(),
-      respondedBy: req.user.id,
+      comment: req.body.comment,
+      respondedBy: req.user._id,
       respondedAt: new Date()
     };
 
     await feedback.save();
-
-    res.status(200).json({
-      message: 'Response submitted successfully',
-      feedback: await feedback.populate('restaurantResponse.respondedBy', 'name')
-    });
-
-  } catch (error) {
-    console.error('Error responding to feedback:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.json({ message: 'Response added' });
+  } catch (err) {
+    console.error('Respond to feedback error:', err);
+    res.status(500).json({ message: 'Failed to respond' });
   }
 };
 
-exports.markHelpful = async (req, res) => {
-  try {
-    const feedback = await Feedback.findById(req.params.id);
-    if (!feedback) {
-      return res.status(404).json({ message: 'Feedback not found' });
-    }
-
-    feedback.helpful += 1;
-    await feedback.save();
-
-    res.status(200).json({ message: 'Marked as helpful' });
-  } catch (error) {
-    console.error('Error marking feedback as helpful:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
+const markHelpful = async (req, res) => {
+  await Feedback.findByIdAndUpdate(req.params.id, {
+    $inc: { helpful: 1 }
+  });
+  res.json({ message: 'Marked helpful' });
 };
 
-exports.reportFeedback = async (req, res) => {
-  try {
-    const { reason } = req.body;
-
-    const feedback = await Feedback.findById(req.params.id);
-    if (!feedback) {
-      return res.status(404).json({ message: 'Feedback not found' });
-    }
-
-    feedback.reportedCount += 1;
-
-    if (feedback.reportedCount >= 3) {
-      feedback.status = 'flagged';
-    }
-
-    await feedback.save();
-
-    res.status(200).json({ message: 'Feedback reported' });
-  } catch (error) {
-    console.error('Error reporting feedback:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
+const reportFeedback = async (req, res) => {
+  await Feedback.findByIdAndUpdate(req.params.id, {
+    reported: true,
+    reportReason: req.body.reason
+  });
+  res.json({ message: 'Feedback reported' });
 };
 
-exports.getPendingModeration = async (req, res) => {
+const getPendingModeration = async (req, res) => {
   try {
-    const { page = 1, limit = 20 } = req.query;
-    const skip = (page - 1) * limit;
-
     const feedbacks = await Feedback.find({ status: 'pending' })
-      .populate('user', 'name email')
+      .populate('user', 'name')
       .populate('restaurant', 'name')
-      .populate('order')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+      .sort({ createdAt: -1 });
 
-    const total = await Feedback.countDocuments({ status: 'pending' });
-
-    res.status(200).json({
-      feedbacks,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total,
-        pages: Math.ceil(total / limit)
-      }
-    });
-  } catch (error) {
-    console.error('Error fetching pending moderation:', error);
+    res.json({ feedbacks });
+  } catch (err) {
+    console.error('Get pending moderation error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };
 
-exports.moderateFeedback = async (req, res) => {
+const moderateFeedback = async (req, res) => {
   try {
     const { status, moderationReason } = req.body;
 
-    if (!['approved', 'rejected'].includes(status)) {
-      return res.status(400).json({ message: 'Invalid moderation status' });
-    }
+    const feedback = await Feedback.findByIdAndUpdate(
+      req.params.id,
+      {
+        status,
+        moderatedBy: req.user._id,
+        moderationReason,
+        moderatedAt: new Date()
+      },
+      { new: true }
+    );
 
-    const feedback = await Feedback.findById(req.params.id);
     if (!feedback) {
       return res.status(404).json({ message: 'Feedback not found' });
     }
 
-    feedback.status = status;
-    feedback.moderatedBy = req.user.id;
-    feedback.moderationReason = moderationReason;
-    feedback.moderatedAt = new Date();
-
-    await feedback.save();
-
-    if (status === 'approved') {
-      await updateRestaurantRatings(feedback.restaurant);
-    }
-
-    res.status(200).json({
-      message: `Feedback ${status}`,
-      feedback
-    });
-
-  } catch (error) {
-    console.error('Error moderating feedback:', error);
+    res.json({ message: 'Feedback moderated', feedback });
+  } catch (err) {
+    console.error('Moderate feedback error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };
 
-
-exports.getFeedbackStats = async (req, res) => {
+const getFeedbackStats = async (req, res) => {
   try {
     const stats = await Feedback.aggregate([
       {
@@ -350,55 +204,30 @@ exports.getFeedbackStats = async (req, res) => {
     ]);
 
     const totalFeedback = await Feedback.countDocuments();
-    const avgRating = await Feedback.aggregate([
+    const averageRating = await Feedback.aggregate([
       { $match: { status: 'approved' } },
       { $group: { _id: null, avg: { $avg: '$overallRating' } } }
     ]);
 
-    res.status(200).json({
+    res.json({
       totalFeedback,
       statusBreakdown: stats,
-      averageRating: avgRating[0]?.avg?.toFixed(1) || 0
+      averageRating: averageRating[0]?.avg?.toFixed(1) || 0
     });
-
-  } catch (error) {
-    console.error('Error fetching feedback stats:', error);
+  } catch (err) {
+    console.error('Get feedback stats error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };
 
-function shouldAutoApprove({ restaurantComment, deliveryComment, overallComment }) {
-  const comments = [restaurantComment, deliveryComment, overallComment].filter(Boolean);
-
-  const suspiciousWords = ['spam', 'fake', 'test', 'asdf', 'qwerty'];
-  const allText = comments.join(' ').toLowerCase();
-
-  return !suspiciousWords.some(word => allText.includes(word));
-}
-
-
-async function updateRestaurantRatings(restaurantId) {
-  try {
-    const stats = await Feedback.aggregate([
-      { $match: { restaurant: restaurantId, status: 'approved' } },
-      {
-        $group: {
-          _id: null,
-          avgOverallRating: { $avg: '$overallRating' },
-          avgRestaurantRating: { $avg: '$restaurantRating' },
-          avgDeliveryRating: { $avg: '$deliveryRating' },
-          totalReviews: { $sum: 1 }
-        }
-      }
-    ]);
-
-    if (stats.length > 0) {
-      await Restaurant.findByIdAndUpdate(restaurantId, {
-        rating: stats[0].avgOverallRating.toFixed(1),
-        totalReviews: stats[0].totalReviews
-      });
-    }
-  } catch (error) {
-    console.error('Error updating restaurant ratings:', error);
-  }
-}
+module.exports = {
+  submitFeedback,
+  getOrderFeedback,
+  getRestaurantFeedback,
+  respondToFeedback,
+  markHelpful,
+  reportFeedback,
+  getPendingModeration,
+  moderateFeedback,
+  getFeedbackStats
+};

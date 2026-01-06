@@ -1,4 +1,3 @@
-// components/DeliverySchedule.jsx
 import { useState, useEffect } from 'react';
 import { getDeliveryScheduleByOrder, updateDeliverySchedule } from '../api/deliverySchedule';
 

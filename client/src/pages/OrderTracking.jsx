@@ -117,7 +117,13 @@ export default function OrderTracking() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="mb-6">
+        <div className="mb-6 flex gap-4">
+          <Link
+            to={`/restaurant/${order.restaurant._id}`}
+            className="text-orange-500 hover:text-orange-600 font-medium"
+          >
+            ← Back to Restaurant
+          </Link>
           <Link
             to="/orders"
             className="text-orange-500 hover:text-orange-600 font-medium"

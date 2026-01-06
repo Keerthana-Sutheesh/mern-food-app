@@ -95,12 +95,7 @@ exports.verifyPayment = async (req, res) => {
 
     await Order.findByIdAndUpdate(orderId, { orderStatus: 'confirmed' });
 
-    // // Save payment method if requested
-    // if (savePaymentMethod) {
-    //   // This would be implemented based on the payment method used
-    //   // For now, we'll skip this as it requires additional Razorpay API calls
-    // }
-
+   
     res.status(200).json({
       message: 'Payment verified successfully',
       payment: payment
@@ -279,10 +274,6 @@ exports.processRefund = async (req, res) => {
       return res.status(400).json({ message: 'Can only refund successful payments' });
     }
 
-
-    // const refund = await razorpay.payments.refund(payment.razorpayPaymentId, {
-    //   amount: (amount || payment.amount) * 100 
-    // });
 
     await Payment.findByIdAndUpdate(payment._id, {
       status: 'refunded',

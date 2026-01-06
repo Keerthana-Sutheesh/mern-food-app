@@ -350,8 +350,7 @@ exports.sendEmailVerification = async (req, res) => {
 
     res.status(200).json({
       message: 'Verification email sent',
-    
-    //  verificationToken
+ 
     });
 
   } catch (error) {

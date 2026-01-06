@@ -1,4 +1,3 @@
-// models/SavedPaymentMethod.js
 const mongoose = require('mongoose');
 
 const savedPaymentMethodSchema = new mongoose.Schema({
@@ -16,9 +15,8 @@ const savedPaymentMethodSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  // Card details
   card: {
-    token: String, // Razorpay token for saved cards
+    token: String,
     last4: String,
     brand: String,
     expiryMonth: Number,
@@ -27,17 +25,15 @@ const savedPaymentMethodSchema = new mongoose.Schema({
     international: Boolean,
     emi: Boolean
   },
-  // UPI details
   upi: {
     id: String,
     handle: String
   },
-  // Net Banking details
   netbanking: {
     bankCode: String,
     bankName: String
   },
-  nickname: String, // User-friendly name
+  nickname: String,
   isActive: {
     type: Boolean,
     default: true

@@ -1,4 +1,3 @@
-// routes/orders.js
 const express = require('express');
 const router = express.Router();
 
@@ -12,19 +11,20 @@ const {
   updateOrderStatus,
   getOrderNotifications,
   markNotificationAsRead,
-  getUserNotifications
+  getUserNotifications,
+  getCurrentOrder
 } = require('../controllers/order');
 
 
 router.post('/', protect, createOrder);
 router.get('/', protect, getOrders);
+router.get('/current/:restaurantId', protect, getCurrentOrder);
 router.get('/user/notifications', protect, getUserNotifications);
 router.get('/:id', protect, getOrderById);
 
 router.put(
   '/:id/status',
   protect,
-  // authorize('admin', 'owner'),
   updateOrderStatus
 );
 

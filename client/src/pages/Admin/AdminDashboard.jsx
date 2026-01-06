@@ -1,4 +1,5 @@
 import { useAdminDashboard } from "../../hooks/useAdminDashboard";
+import FeedbackModeration from "../../components/FeedbackModeration";
 
 export default function AdminDashboard() {
   const {
@@ -8,8 +9,7 @@ export default function AdminDashboard() {
     activeTab,
     loading,
     changeTab,
-    approveRestaurant,
-    changeUserRole
+    approveRestaurant
   } = useAdminDashboard();
 
   if (loading) {
@@ -25,13 +25,14 @@ export default function AdminDashboard() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
 
-  
+    
         <div className="bg-white rounded shadow mb-6">
           <div className="flex border-b">
             {[
               { id: "stats", label: "Dashboard 📊" },
               { id: "restaurants", label: "Restaurants 🏪" },
-              { id: "users", label: "Users 👥" }
+              { id: "users", label: "Users 👥" },
+              { id: "moderation", label: "Feedback Moderation ⚖️" }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -48,7 +49,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-  
+     
         {activeTab === "stats" && stats && (
           <div className="grid md:grid-cols-4 gap-6">
             {[
@@ -65,7 +66,7 @@ export default function AdminDashboard() {
           </div>
         )}
 
-       
+  
         {activeTab === "restaurants" && (
           <div className="bg-white p-6 rounded shadow">
             <table className="w-full">
@@ -81,14 +82,14 @@ export default function AdminDashboard() {
                 {restaurants.map((r) => (
                   <tr key={r._id} className="border-t">
                     <td>{r.name}</td>
-                    <td>{r.owner.name}</td>
+                    <td>{r.owner?.name}</td>
                     <td>{r.isApproved ? "Approved" : "Pending"}</td>
                     <td>
                       <button
                         onClick={() =>
                           approveRestaurant(r._id, !r.isApproved)
                         }
-                        className={`${
+                        className={`font-medium ${
                           r.isApproved ? "text-red-600" : "text-green-600"
                         }`}
                       >
@@ -109,33 +110,25 @@ export default function AdminDashboard() {
               <thead>
                 <tr className="text-left text-gray-500">
                   <th>User</th>
+                  <th>Email</th>
                   <th>Role</th>
-                  <th>Change Role</th>
                 </tr>
               </thead>
               <tbody>
                 {users.map((u) => (
                   <tr key={u._id} className="border-t">
                     <td>{u.name}</td>
-                    <td>{u.role}</td>
-                    <td>
-                      <select
-                        value={u.role}
-                        onChange={(e) =>
-                          changeUserRole(u._id, e.target.value)
-                        }
-                        className="border rounded px-2 py-1"
-                      >
-                        <option value="user">User</option>
-                        <option value="owner">Owner</option>
-                        <option value="admin">Admin</option>
-                      </select>
-                    </td>
+                    <td>{u.email}</td>
+                    <td className="font-medium capitalize">{u.role}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+        )}
+
+        {activeTab === "moderation" && (
+          <FeedbackModeration />
         )}
       </div>
     </div>

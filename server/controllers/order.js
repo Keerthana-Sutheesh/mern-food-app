@@ -97,6 +97,28 @@ exports.getOrders = async (req, res) => {
   }
 };
 
+exports.getCurrentOrder = async (req, res) => {
+  try {
+    const { restaurantId } = req.params;
+
+    const order = await Order.findOne({
+      user: req.user.id,
+      restaurant: restaurantId
+    })
+    .sort({ createdAt: -1 })
+    .populate('restaurant', 'name');
+
+    if (!order) {
+      return res.status(404).json({ message: 'No order found for this restaurant' });
+    }
+
+    res.status(200).json(order);
+  } catch (error) {
+    console.error('Get current order error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 
 exports.getOrderNotifications = async (req, res) => {
   try {

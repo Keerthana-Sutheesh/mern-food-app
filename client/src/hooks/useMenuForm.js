@@ -5,9 +5,15 @@ const initialFormState = {
   description: "",
   price: "",
   category: "appetizer",
-  isVegetarian: false,
-  isVegan: false,
-  spicyLevel: "mild"
+  dietType: "non-veg",
+  spicyLevel: "mild",
+  nutritionalInfo: {
+    calories: 0,
+    protein: 0,
+    carbs: 0,
+    fat: 0,
+    fiber: 0
+  }
 };
 
 export function useMenuForm() {
@@ -17,10 +23,23 @@ export function useMenuForm() {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setMenuForm((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value
-    }));
+
+    // Handle nested nutritional info
+    if (name.startsWith("nutritionalInfo.")) {
+      const key = name.split(".")[1];
+      setMenuForm((prev) => ({
+        ...prev,
+        nutritionalInfo: {
+          ...prev.nutritionalInfo,
+          [key]: Number(value)
+        }
+      }));
+    } else {
+      setMenuForm((prev) => ({
+        ...prev,
+        [name]: type === "checkbox" ? checked : value
+      }));
+    }
   };
 
   const startEdit = (item) => {
@@ -30,9 +49,15 @@ export function useMenuForm() {
       description: item.description || "",
       price: item.price,
       category: item.category,
-      isVegetarian: item.isVegetarian,
-      isVegan: item.isVegan,
-      spicyLevel: item.spicyLevel || "mild"
+      dietType: item.isVegan ? 'vegan' : item.isVegetarian ? 'vegetarian' : 'non-veg',
+      spicyLevel: item.spicyLevel || "mild",
+      nutritionalInfo: {
+        calories: item.nutritionalInfo?.calories || 0,
+        protein: item.nutritionalInfo?.protein || 0,
+        carbs: item.nutritionalInfo?.carbs || 0,
+        fat: item.nutritionalInfo?.fat || 0,
+        fiber: item.nutritionalInfo?.fiber || 0
+      }
     });
     setShowMenuForm(true);
   };

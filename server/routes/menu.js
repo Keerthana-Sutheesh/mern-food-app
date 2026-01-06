@@ -1,19 +1,29 @@
 const express = require('express');
 const router = express.Router();
 
-const auth = require('../middlewares/auth');
-const roles = require('../middlewares/roles');
 
 const {
   getMenuByRestaurant,
   getMenuItemById,
   addMenuItem,
-  updateMenuItem
+editMenuItem 
 } = require('../controllers/menuItem');
+
 
 router.get('/restaurant/:restaurantId', getMenuByRestaurant);
 router.get('/:id', getMenuItemById);
-router.post('/',addMenuItem);
-router.put('/:id', updateMenuItem);
+
+router.post(
+  '/restaurant/:restaurantId',
+ 
+  addMenuItem
+);
+
+router.put(
+  '/:id',
+
+  editMenuItem
+);
+
 
 module.exports = router;

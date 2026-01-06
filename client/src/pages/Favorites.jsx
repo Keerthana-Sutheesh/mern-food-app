@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getUserFavorites, removeFromFavorites } from "../api/restaurant";
+import { getUserFavorites, removeFromFavorites } from "../api/favorites";
 
 export default function Favorites() {
   const [favorites, setFavorites] = useState({ restaurants: [], menuItems: [] });

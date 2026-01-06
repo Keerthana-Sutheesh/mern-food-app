@@ -25,7 +25,7 @@ export default function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-    
+
       <Route
         path="/restaurant/:id"
         element={
@@ -37,7 +37,7 @@ export default function AppRoutes() {
       <Route
         path="/cart"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["user"]}>
             <Cart />
           </ProtectedRoute>
         }
@@ -45,7 +45,7 @@ export default function AppRoutes() {
       <Route
         path="/favorites"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["user"]}>
             <Favorites />
           </ProtectedRoute>
         }
@@ -54,7 +54,7 @@ export default function AppRoutes() {
       <Route
         path="/orders"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["user"]}>
             <Orders />
           </ProtectedRoute>
         }
@@ -63,7 +63,7 @@ export default function AppRoutes() {
       <Route
         path="/orders/:id"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["user"]}>
             <OrderTracking />
           </ProtectedRoute>
         }
@@ -72,7 +72,7 @@ export default function AppRoutes() {
       <Route
         path="/payments/history"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["user"]}>
             <PaymentHistory />
           </ProtectedRoute>
         }
@@ -81,7 +81,7 @@ export default function AppRoutes() {
       <Route
         path="/payments/saved-methods"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["user"]}>
             <SavedPaymentMethods />
           </ProtectedRoute>
         }
@@ -90,7 +90,7 @@ export default function AppRoutes() {
       <Route
         path="/profile"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["user", "owner", "admin"]}>
             <Profile />
           </ProtectedRoute>
         }
@@ -99,7 +99,7 @@ export default function AppRoutes() {
       <Route
         path="/order-history"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["user"]}>
             <OrderHistory />
           </ProtectedRoute>
         }
@@ -108,11 +108,12 @@ export default function AppRoutes() {
       <Route
         path="/orders/details/:orderId"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["user"]}>
             <OrderDetails />
           </ProtectedRoute>
         }
       />
+
 
       <Route
         path="/admin"
@@ -132,13 +133,13 @@ export default function AppRoutes() {
         }
       />
       <Route
-  path="/owner/create-restaurant"
-  element={
-    <ProtectedRoute allowedRoles={["owner"]}>
-      <CreateRestaurant />
-    </ProtectedRoute>
-  }
-/>
+        path="/owner/create-restaurant"
+        element={
+          <ProtectedRoute allowedRoles={["owner"]}>
+            <CreateRestaurant />
+          </ProtectedRoute>
+        }
+      />
       <Route path="/not-authorized" element={<NotAuthorized />} />
     </Routes>
   );

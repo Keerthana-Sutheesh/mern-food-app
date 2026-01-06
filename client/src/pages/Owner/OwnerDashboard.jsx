@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useOwnerRestaurant } from "../../hooks/useOwnerRestaurant";
 import { useMenuForm } from "../../hooks/useMenuForm";
+import OwnerFeedback from "./OwnerFeedback";
 
 export default function OwnerDashboard() {
   const {
@@ -23,7 +24,12 @@ export default function OwnerDashboard() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await saveMenuItem(menuForm, editingItem?._id);
+    const formData = {
+      ...menuForm,
+      isVegetarian: menuForm.dietType === 'vegetarian',
+      isVegan: menuForm.dietType === 'vegan'
+    };
+    await saveMenuItem(formData, editingItem?._id);
     resetForm();
   };
 
@@ -55,7 +61,6 @@ export default function OwnerDashboard() {
           </Link>
         ) : (
           <>
-          
             <div className="bg-white p-6 rounded-lg shadow mb-8">
               <h2 className="text-2xl font-bold">{restaurant.name}</h2>
               <p className="text-gray-600">
@@ -63,8 +68,7 @@ export default function OwnerDashboard() {
               </p>
             </div>
 
-         
-            <div className="bg-white rounded-lg shadow">
+            <div className="bg-white rounded-lg shadow mb-8">
               <div className="p-6 flex justify-between items-center border-b">
                 <h3 className="text-xl font-semibold">Menu</h3>
                 <button
@@ -80,6 +84,33 @@ export default function OwnerDashboard() {
                   <div key={item._id} className="border p-4 rounded">
                     <h4 className="font-semibold">{item.name}</h4>
                     <p className="text-orange-600 font-bold">₹{item.price}</p>
+
+                    {item.description && (
+                      <p className="text-gray-600 text-sm mt-1">{item.description}</p>
+                    )}
+
+                    {item.nutritionalInfo &&
+                      Object.values(item.nutritionalInfo).some(v => v > 0) && (
+                        <div className="mt-2 p-2 bg-gray-50 rounded text-xs">
+                          <div className="grid grid-cols-2 gap-1 text-gray-600">
+                            {item.nutritionalInfo.calories > 0 && (
+                              <span>🔥 {item.nutritionalInfo.calories} cal</span>
+                            )}
+                            {item.nutritionalInfo.protein > 0 && (
+                              <span>💪 {item.nutritionalInfo.protein}g protein</span>
+                            )}
+                            {item.nutritionalInfo.carbs > 0 && (
+                              <span>🍞 {item.nutritionalInfo.carbs}g carbs</span>
+                            )}
+                            {item.nutritionalInfo.fat > 0 && (
+                              <span>🥑 {item.nutritionalInfo.fat}g fat</span>
+                            )}
+                            {item.nutritionalInfo.fiber > 0 && (
+                              <span>🌾 {item.nutritionalInfo.fiber}g fiber</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
 
                     <div className="flex gap-2 mt-3">
                       <button
@@ -100,19 +131,31 @@ export default function OwnerDashboard() {
               </div>
             </div>
 
-        
+     
             {showMenuForm && (
-              <div className="fixed inset-0 bg-black/50 flex justify-center items-center">
+              <div className="fixed inset-0 bg-black/50 flex justify-center items-center p-4 z-50">
                 <form
                   onSubmit={handleSubmit}
-                  className="bg-white p-6 rounded w-full max-w-md space-y-4"
+                  className="bg-white p-6 rounded w-full max-w-md space-y-3 max-h-[90vh] overflow-y-auto"
                 >
+                  <h3 className="text-xl font-semibold">
+                    {editingItem ? "Edit Item" : "Add Menu Item"}
+                  </h3>
+
                   <input
                     name="name"
                     value={menuForm.name}
                     onChange={handleChange}
                     placeholder="Name"
                     required
+                    className="w-full border p-2 rounded"
+                  />
+
+                  <textarea
+                    name="description"
+                    value={menuForm.description}
+                    onChange={handleChange}
+                    placeholder="Description"
                     className="w-full border p-2 rounded"
                   />
 
@@ -126,7 +169,86 @@ export default function OwnerDashboard() {
                     className="w-full border p-2 rounded"
                   />
 
-                  <div className="flex gap-3">
+                  <select
+                    name="category"
+                    value={menuForm.category}
+                    onChange={handleChange}
+                    className="w-full border p-2 rounded"
+                  >
+                    <option value="appetizer">Appetizer</option>
+                    <option value="main">Main</option>
+                    <option value="dessert">Dessert</option>
+                    <option value="beverage">Beverage</option>
+                  </select>
+
+                  <select
+                    name="dietType"
+                    value={menuForm.dietType || 'non-veg'}
+                    onChange={handleChange}
+                    className="w-full p-2 border rounded"
+                  >
+                    <option value="non-veg">Non-Vegetarian</option>
+                    <option value="vegetarian">Vegetarian</option>
+                    <option value="vegan">Vegan</option>
+                  </select>
+
+                  <select
+                    name="spicyLevel"
+                    value={menuForm.spicyLevel}
+                    onChange={handleChange}
+                    className="w-full border p-2 rounded"
+                  >
+                    <option value="mild">Mild</option>
+                    <option value="medium">Medium</option>
+                    <option value="hot">Hot</option>
+                    <option value="extra hot">Extra Hot</option>
+                  </select>
+
+             
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="number"
+                      name="nutritionalInfo.calories"
+                      value={menuForm.nutritionalInfo.calories}
+                      onChange={handleChange}
+                      placeholder="Calories"
+                      className="w-full border p-2 rounded"
+                    />
+                    <input
+                      type="number"
+                      name="nutritionalInfo.protein"
+                      value={menuForm.nutritionalInfo.protein}
+                      onChange={handleChange}
+                      placeholder="Protein (g)"
+                      className="w-full border p-2 rounded"
+                    />
+                    <input
+                      type="number"
+                      name="nutritionalInfo.carbs"
+                      value={menuForm.nutritionalInfo.carbs}
+                      onChange={handleChange}
+                      placeholder="Carbs (g)"
+                      className="w-full border p-2 rounded"
+                    />
+                    <input
+                      type="number"
+                      name="nutritionalInfo.fat"
+                      value={menuForm.nutritionalInfo.fat}
+                      onChange={handleChange}
+                      placeholder="Fat (g)"
+                      className="w-full border p-2 rounded"
+                    />
+                    <input
+                      type="number"
+                      name="nutritionalInfo.fiber"
+                      value={menuForm.nutritionalInfo.fiber}
+                      onChange={handleChange}
+                      placeholder="Fiber (g)"
+                      className="w-full border p-2 rounded"
+                    />
+                  </div>
+
+                  <div className="flex gap-3 mt-3">
                     <button className="flex-1 bg-orange-500 text-white py-2 rounded">
                       {editingItem ? "Update" : "Add"}
                     </button>
@@ -141,6 +263,7 @@ export default function OwnerDashboard() {
                 </form>
               </div>
             )}
+            {restaurant && <OwnerFeedback restaurantId={restaurant._id} />}
           </>
         )}
       </div>

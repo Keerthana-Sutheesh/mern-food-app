@@ -1,301 +1,220 @@
-// components/RestaurantFeedback.jsx
 import { useState, useEffect } from 'react';
-import { getRestaurantFeedback, markFeedbackHelpful, reportFeedback, respondToFeedback } from '../api/feedback';
+import {
+  getRestaurantFeedback,
+  markFeedbackHelpful,
+  reportFeedback,
+  respondToFeedback,
+  submitFeedback
+} from '../api/feedback';
 import { useAuth } from '../context/auth';
 
-const RestaurantFeedback = ({ restaurantId, isOwner = false }) => {
+const RestaurantFeedback = ({ restaurantId, orderId, isOwner = false }) => {
   const { user } = useAuth();
   const [feedbacks, setFeedbacks] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState({ rating: '', type: '' });
+
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
   const [respondingTo, setRespondingTo] = useState(null);
   const [responseText, setResponseText] = useState('');
 
   useEffect(() => {
     loadFeedback();
-  }, [restaurantId, filter]);
+  }, [restaurantId]);
 
   const loadFeedback = async () => {
+    setLoading(true);
     try {
-      const response = await getRestaurantFeedback(restaurantId, filter);
-      setFeedbacks(response.data.feedbacks);
-      setStats(response.data.stats);
-    } catch (error) {
-      console.error('Failed to load feedback:', error);
+      const res = await getRestaurantFeedback(restaurantId);
+      setFeedbacks(res?.data?.feedbacks || []);
+      setStats(res?.data?.stats || null);
+    } catch (err) {
+      console.error('Load feedback failed:', err);
+      setFeedbacks([]);
+      setStats(null);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleHelpful = async (feedbackId) => {
+  const handleSubmitFeedback = async () => {
+    if (!rating || !comment.trim()) {
+      alert('Please give rating and comment');
+      return;
+    }
+
+    if (!orderId) {
+      alert('Cannot submit feedback: missing order ID');
+      return;
+    }
+
     try {
-      await markFeedbackHelpful(feedbackId);
-     
-      setFeedbacks(prev => prev.map(f =>
-        f._id === feedbackId ? { ...f, helpful: f.helpful + 1 } : f
-      ));
-    } catch (error) {
-      console.error('Failed to mark as helpful:', error);
+      setSubmitting(true);
+      await submitFeedback({
+        orderId: orderId,
+        restaurantId,
+        overallRating: rating,
+        overallComment: comment
+      });
+
+      setRating(0);
+      setComment('');
+      loadFeedback();
+    } catch (err) {
+      console.error('Submit feedback error:', err);
+      const errorMessage = err.response?.data?.message || 'Failed to submit feedback';
+      alert(errorMessage);
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const handleReport = async (feedbackId) => {
-    const reason = prompt('Why are you reporting this feedback?');
-    if (reason) {
-      try {
-        await reportFeedback(feedbackId, reason);
-        alert('Feedback reported. Thank you for your feedback.');
-      } catch (error) {
-        console.error('Failed to report feedback:', error);
-      }
+  const handleHelpful = async (id) => {
+    try {
+      await markFeedbackHelpful(id);
+      setFeedbacks(prev =>
+        prev.map(f => f._id === id ? { ...f, helpful: (f.helpful || 0) + 1 } : f)
+      );
+    } catch (err) {
+      console.error(err);
     }
   };
 
-  const handleResponse = async (feedbackId) => {
+  const handleReport = async (id) => {
+    const reason = prompt('Reason for reporting?');
+    if (!reason) return;
+    try {
+      await reportFeedback(id, reason);
+      alert('Reported successfully');
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleResponse = async (id) => {
     if (!responseText.trim()) return;
-
     try {
-      await respondToFeedback(feedbackId, responseText);
+      await respondToFeedback(id, responseText);
       setRespondingTo(null);
       setResponseText('');
-      loadFeedback(); // Reload to show the response
-    } catch (error) {
-      console.error('Failed to submit response:', error);
+      await loadFeedback();
+    } catch (err) {
+      console.error(err);
     }
   };
-
-  const renderStars = (rating) => {
-    return (
-      <div className="flex items-center">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <span
-            key={star}
-            className={`text-lg ${star <= rating ? 'text-yellow-400' : 'text-gray-300'}`}
-          >
-            ★
-          </span>
-        ))}
-        <span className="ml-2 text-sm text-gray-600">({rating})</span>
-      </div>
-    );
-  };
+  const renderStars = (value = 0, clickable = false) => (
+    <div className="flex gap-1">
+      {[1, 2, 3, 4, 5].map(i => (
+        <button
+          key={i}
+          disabled={!clickable}
+          onClick={() => clickable && setRating(i)}
+          className={`text-xl ${i <= value ? 'text-orange-500' : 'text-gray-300'}`}
+        >
+          ★
+        </button>
+      ))}
+    </div>
+  );
 
   if (loading) {
-    return <div className="text-center py-8">Loading reviews...</div>;
+    return <div className="text-center py-6">Loading reviews...</div>;
   }
 
   return (
     <div className="space-y-6">
- 
-      {stats && (
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h3 className="text-xl font-semibold text-gray-900 mb-4">Customer Reviews</h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-orange-500">{stats.avgOverallRating}</div>
-              <div className="flex justify-center mb-2">{renderStars(Math.round(stats.avgOverallRating))}</div>
-              <div className="text-sm text-gray-600">{stats.totalReviews} reviews</div>
-            </div>
-
-            <div>
-              <h4 className="font-medium text-gray-900 mb-2">Rating Breakdown</h4>
-              <div className="space-y-1">
-                {stats.distribution.map(({ rating, count }) => (
-                  <div key={rating} className="flex items-center text-sm">
-                    <span className="w-8">{rating}★</span>
-                    <div className="flex-1 bg-gray-200 rounded-full h-2 mx-2">
-                      <div
-                        className="bg-orange-500 h-2 rounded-full"
-                        style={{ width: `${stats.totalReviews > 0 ? (count / stats.totalReviews) * 100 : 0}%` }}
-                      ></div>
-                    </div>
-                    <span className="w-8 text-right">{count}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <h4 className="font-medium text-gray-900 mb-2">Average Ratings</h4>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span>Restaurant:</span>
-                  <span>{stats.avgRestaurantRating}★</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Delivery:</span>
-                  <span>{stats.avgDeliveryRating}★</span>
-                </div>
-              </div>
-            </div>
-          </div>
+      {!isOwner && user && orderId && (
+        <div className="bg-white p-5 rounded shadow">
+          <h3 className="font-semibold mb-2">Leave a Review</h3>
+          {renderStars(rating, true)}
+          <textarea
+            value={comment}
+            onChange={e => setComment(e.target.value)}
+            rows="3"
+            className="w-full border p-2 mt-2 rounded"
+            placeholder="Share your experience..."
+          />
+          <button
+            onClick={handleSubmitFeedback}
+            disabled={submitting}
+            className="mt-3 bg-orange-500 text-white px-4 py-2 rounded"
+          >
+            Submit Review
+          </button>
         </div>
       )}
 
-  
-      <div className="bg-white rounded-lg shadow-sm p-4">
-        <div className="flex flex-wrap gap-4">
-          <select
-            value={filter.rating}
-            onChange={(e) => setFilter(prev => ({ ...prev, rating: e.target.value }))}
-            className="p-2 border border-gray-300 rounded-lg"
-          >
-            <option value="">All Ratings</option>
-            <option value="5">5 Stars</option>
-            <option value="4">4 Stars</option>
-            <option value="3">3 Stars</option>
-            <option value="2">2 Stars</option>
-            <option value="1">1 Star</option>
-          </select>
-
-          <select
-            value={filter.type}
-            onChange={(e) => setFilter(prev => ({ ...prev, type: e.target.value }))}
-            className="p-2 border border-gray-300 rounded-lg"
-          >
-            <option value="">All Types</option>
-            <option value="food_quality">Food Quality</option>
-            <option value="service">Service</option>
-            <option value="ambiance">Ambiance</option>
-            <option value="value">Value</option>
-            <option value="overall">Overall</option>
-          </select>
+   
+      {stats && (
+        <div className="bg-white p-5 rounded shadow">
+          <p className="text-lg font-semibold">
+            {stats.totalReviews || 0} Reviews • ⭐ {stats.avgOverallRating || 0}
+          </p>
         </div>
-      </div>
+      )}
 
-      {/* Feedback List */}
-      <div className="space-y-4">
-        {feedbacks.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-            <p className="text-gray-500">No reviews yet. Be the first to leave a review!</p>
-          </div>
-        ) : (
-          feedbacks.map((feedback) => (
-            <div key={feedback._id} className="bg-white rounded-lg shadow-sm p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium text-gray-900">{feedback.user.name}</span>
-                    <span className="text-sm text-gray-500">
-                      {new Date(feedback.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                  {renderStars(feedback.overallRating)}
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleHelpful(feedback._id)}
-                    className="text-sm text-gray-600 hover:text-green-600 flex items-center gap-1"
-                  >
-                    👍 Helpful ({feedback.helpful})
-                  </button>
-                  <button
-                    onClick={() => handleReport(feedback._id)}
-                    className="text-sm text-gray-600 hover:text-red-600"
-                  >
-                    🚨 Report
-                  </button>
-                </div>
-              </div>
 
-              {/* Restaurant Feedback */}
-              {feedback.restaurantRating && (
-                <div className="mb-4 p-3 bg-orange-50 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-sm font-medium text-orange-800">🍽️ Restaurant</span>
-                    {renderStars(feedback.restaurantRating)}
-                  </div>
-                  {feedback.restaurantComment && (
-                    <p className="text-sm text-gray-700">{feedback.restaurantComment}</p>
-                  )}
-                  <span className="text-xs text-orange-600 capitalize">
-                    {feedback.restaurantFeedbackType.replace('_', ' ')}
-                  </span>
-                </div>
-              )}
-
-              {/* Delivery Feedback */}
-              {feedback.deliveryRating && (
-                <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-sm font-medium text-blue-800">🚚 Delivery</span>
-                    {renderStars(feedback.deliveryRating)}
-                  </div>
-                  {feedback.deliveryComment && (
-                    <p className="text-sm text-gray-700">{feedback.deliveryComment}</p>
-                  )}
-                  <span className="text-xs text-blue-600 capitalize">
-                    {feedback.deliveryFeedbackType.replace('_', ' ')}
-                  </span>
-                </div>
-              )}
-
-             
-              {feedback.overallComment && (
-                <div className="p-3 bg-gray-50 rounded-lg">
-                  <p className="text-gray-700">{feedback.overallComment}</p>
-                </div>
-              )}
-
-            
-              {feedback.restaurantResponse && (
-                <div className="mt-4 p-4 bg-green-50 border-l-4 border-green-400 rounded">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-sm font-medium text-green-800">💬 Restaurant Response</span>
-                    <span className="text-xs text-green-600">
-                      {new Date(feedback.restaurantResponse.respondedAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-700">{feedback.restaurantResponse.comment}</p>
-                </div>
-              )}
-
-            
-              {isOwner && !feedback.restaurantResponse && (
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  {respondingTo === feedback._id ? (
-                    <div className="space-y-3">
-                      <textarea
-                        value={responseText}
-                        onChange={(e) => setResponseText(e.target.value)}
-                        placeholder="Write your response to this feedback..."
-                        className="w-full p-3 border border-gray-300 rounded-lg resize-none"
-                        rows="3"
-                      />
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleResponse(feedback._id)}
-                          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
-                        >
-                          Submit Response
-                        </button>
-                        <button
-                          onClick={() => {
-                            setRespondingTo(null);
-                            setResponseText('');
-                          }}
-                          className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => setRespondingTo(feedback._id)}
-                      className="text-green-600 hover:text-green-800 text-sm font-medium"
-                    >
-                      Respond to this review
-                    </button>
-                  )}
-                </div>
-              )}
+      {Array.isArray(feedbacks) && feedbacks.length === 0 ? (
+        <div className="bg-white p-6 rounded text-center text-gray-500">
+          No reviews yet
+        </div>
+      ) : (
+        feedbacks.map(f => (
+          <div key={f._id} className="bg-white p-5 rounded shadow">
+            <div className="flex justify-between">
+              <p className="font-medium">{f.user?.name || 'Anonymous'}</p>
+              {renderStars(f.overallRating)}
             </div>
-          ))
-        )}
-      </div>
+
+            <p className="mt-2 text-gray-700">{f.overallComment}</p>
+
+            <div className="flex gap-4 text-sm mt-3">
+              <button onClick={() => handleHelpful(f._id)}>
+                👍 Helpful ({f.helpful || 0})
+              </button>
+              <button onClick={() => handleReport(f._id)}>🚨 Report</button>
+            </div>
+
+            {f.restaurantResponse && (
+              <div className="mt-3 bg-green-50 p-3 rounded">
+                <strong>Owner response:</strong>
+                <p>{f.restaurantResponse.comment}</p>
+              </div>
+            )}
+
+            {isOwner && !f.restaurantResponse && (
+              <div className="mt-3">
+                {respondingTo === f._id ? (
+                  <>
+                    <textarea
+                      value={responseText}
+                      onChange={e => setResponseText(e.target.value)}
+                      className="w-full border p-2 rounded"
+                    />
+                    <button
+                      onClick={() => handleResponse(f._id)}
+                      className="mt-2 bg-green-600 text-white px-4 py-1 rounded"
+                    >
+                      Submit
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => setRespondingTo(f._id)}
+                    className="text-green-600"
+                  >
+                    Respond
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        ))
+      )}
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import api from './api';
 
-export const getMenuByRestaurant = (restaurantId) =>
-  api.get(`/menus/${restaurantId}`);
+export const getRestaurantById = (restaurantId) =>
+  api.get(`/restaurant/${restaurantId}`);
+

@@ -1,11 +1,10 @@
 const Restaurant = require("../models/Restaurant");
 const User = require("../models/User");
 
-
 exports.getAllRestaurants = async (req, res) => {
   try {
-    const restaurants = await Restaurant.find({})
-      .populate('owner', 'name email')
+    const restaurants = await Restaurant.find()
+      .populate("owner", "name email")
       .sort({ createdAt: -1 });
 
     res.json({ restaurants });
@@ -24,14 +23,14 @@ exports.updateRestaurantStatus = async (req, res) => {
       id,
       { isApproved },
       { new: true }
-    ).populate('owner', 'name email');
+    ).populate("owner", "name email");
 
     if (!restaurant) {
       return res.status(404).json({ message: "Restaurant not found" });
     }
 
     res.json({
-      message: `Restaurant ${isApproved ? 'approved' : 'rejected'}`,
+      message: `Restaurant ${isApproved ? "approved" : "rejected"}`,
       restaurant
     });
   } catch (error) {
@@ -42,40 +41,11 @@ exports.updateRestaurantStatus = async (req, res) => {
 
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await User.find({})
-      .select('-password')
+    const users = await User.find()
+      .select("-password")
       .sort({ createdAt: -1 });
 
     res.json({ users });
-  } catch (error) {
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
-
-exports.updateUserRole = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { role } = req.body;
-
-    if (!['user', 'owner', 'admin'].includes(role)) {
-      return res.status(400).json({ message: "Invalid role" });
-    }
-
-    const user = await User.findByIdAndUpdate(
-      id,
-      { role },
-      { new: true }
-    ).select('-password');
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.json({
-      message: "User role updated successfully",
-      user
-    });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }

@@ -42,7 +42,7 @@ const restaurantSchema = new mongoose.Schema(
     },
     isApproved: {
       type: Boolean,
-      default: false, // admin will approve later
+      default: false,
     },
     isOpen: {
       type: Boolean,

@@ -1,4 +1,3 @@
-// components/FeedbackModeration.jsx
 import { useState, useEffect } from 'react';
 import { getPendingModeration, moderateFeedback, getFeedbackStats } from '../api/feedback';
 
@@ -33,7 +32,7 @@ const FeedbackModeration = () => {
     try {
       await moderateFeedback(feedbackId, status, reason);
       setModerating(null);
-      loadData(); // Reload data
+      loadData();
     } catch (error) {
       console.error('Failed to moderate feedback:', error);
       alert('Failed to moderate feedback');

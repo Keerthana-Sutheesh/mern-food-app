@@ -1,7 +1,5 @@
 import api from "./api";
 
-
-
 export const getAdminStats = () =>
   api.get("/admin/stats");
 
@@ -13,6 +11,3 @@ export const updateRestaurantStatus = (id, data) =>
 
 export const getAllUsers = () =>
   api.get("/admin/users");
-
-export const updateUserRole = (id, data) =>
-  api.put(`/admin/users/${id}/role`, data);

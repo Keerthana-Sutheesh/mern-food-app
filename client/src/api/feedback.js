@@ -1,7 +1,10 @@
-
 import api from './api';
 
 export const submitFeedback = async (feedbackData) => {
+  if (!feedbackData?.orderId) {
+    throw new Error('orderId is required to submit feedback');
+  }
+
   const response = await api.post('/feedbacks', feedbackData);
   return response;
 };
@@ -14,13 +17,18 @@ export const getOrderFeedback = async (orderId) => {
 
 
 export const getRestaurantFeedback = async (restaurantId, params = {}) => {
-  const response = await api.get(`/feedbacks/restaurant/${restaurantId}`, { params });
+  const response = await api.get(
+    `/feedbacks/restaurant/${restaurantId}`,
+    { params }
+  );
   return response;
 };
 
-
 export const respondToFeedback = async (feedbackId, comment) => {
-  const response = await api.put(`/feedbacks/${feedbackId}/response`, { comment });
+  const response = await api.put(
+    `/feedbacks/${feedbackId}/response`,
+    { comment }
+  );
   return response;
 };
 
@@ -30,23 +38,31 @@ export const markFeedbackHelpful = async (feedbackId) => {
   return response;
 };
 
-
 export const reportFeedback = async (feedbackId, reason) => {
-  const response = await api.put(`/feedbacks/${feedbackId}/report`, { reason });
+  const response = await api.put(
+    `/feedbacks/${feedbackId}/report`,
+    { reason }
+  );
   return response;
 };
 
 
 export const getPendingModeration = async (params = {}) => {
-  const response = await api.get('/feedbacks/moderation/pending', { params });
+  const response = await api.get(
+    '/feedbacks/moderation/pending',
+    { params }
+  );
   return response;
 };
 
 export const moderateFeedback = async (feedbackId, status, reason) => {
-  const response = await api.put(`/feedbacks/${feedbackId}/moderate`, {
-    status,
-    moderationReason: reason
-  });
+  const response = await api.put(
+    `/feedbacks/${feedbackId}/moderate`,
+    {
+      status,
+      moderationReason: reason
+    }
+  );
   return response;
 };
 

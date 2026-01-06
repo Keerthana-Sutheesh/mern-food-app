@@ -3,8 +3,7 @@ import {
   getAdminStats,
   getAllRestaurants,
   updateRestaurantStatus,
-  getAllUsers,
-  updateUserRole
+  getAllUsers
 } from "../api/admin";
 
 export function useAdminDashboard() {
@@ -14,6 +13,7 @@ export function useAdminDashboard() {
   const [activeTab, setActiveTab] = useState("stats");
   const [loading, setLoading] = useState(true);
 
+ 
   const fetchStats = useCallback(async () => {
     try {
       const res = await getAdminStats();
@@ -34,6 +34,7 @@ export function useAdminDashboard() {
     }
   };
 
+ 
   const fetchUsers = async () => {
     try {
       const res = await getAllUsers();
@@ -47,6 +48,7 @@ export function useAdminDashboard() {
     fetchStats();
   }, [fetchStats]);
 
+
   const changeTab = (tab) => {
     setActiveTab(tab);
 
@@ -58,6 +60,7 @@ export function useAdminDashboard() {
       fetchUsers();
     }
   };
+
 
   const approveRestaurant = async (id, isApproved) => {
     try {
@@ -72,19 +75,6 @@ export function useAdminDashboard() {
     }
   };
 
-  const changeUserRole = async (id, role) => {
-    try {
-      await updateUserRole(id, { role });
-      setUsers((prev) =>
-        prev.map((u) =>
-          u._id === id ? { ...u, role } : u
-        )
-      );
-    } catch (err) {
-      console.error("Failed to update user role", err);
-    }
-  };
-
   return {
     stats,
     restaurants,
@@ -92,7 +82,6 @@ export function useAdminDashboard() {
     activeTab,
     loading,
     changeTab,
-    approveRestaurant,
-    changeUserRole
+    approveRestaurant
   };
 }
