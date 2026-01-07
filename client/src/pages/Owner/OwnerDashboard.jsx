@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useOwnerRestaurant } from "../../hooks/useOwnerRestaurant";
 import { useMenuForm } from "../../hooks/useMenuForm";
 import OwnerFeedback from "./OwnerFeedback";
+import { useState } from "react";
 
 export default function OwnerDashboard() {
   const {
@@ -22,21 +23,32 @@ export default function OwnerDashboard() {
     resetForm
   } = useMenuForm();
 
+  const [customizations, setCustomizations] = useState([]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const formData = {
       ...menuForm,
       isVegetarian: menuForm.dietType === 'vegetarian',
-      isVegan: menuForm.dietType === 'vegan'
+      isVegan: menuForm.dietType === 'vegan',
+      customizationOptions: customizations
     };
     await saveMenuItem(formData, editingItem?._id);
     resetForm();
+    setCustomizations([]);
   };
 
   const handleDelete = async (id) => {
     if (window.confirm("Delete this menu item?")) {
       await removeMenuItem(id);
     }
+  };
+
+  const handleAddCustomization = () => {
+    setCustomizations([
+      ...customizations,
+      { name: "", type: "select", options: [], price: 0 }
+    ]);
   };
 
   if (loading) {
@@ -72,7 +84,10 @@ export default function OwnerDashboard() {
               <div className="p-6 flex justify-between items-center border-b">
                 <h3 className="text-xl font-semibold">Menu</h3>
                 <button
-                  onClick={() => setShowMenuForm(true)}
+                  onClick={() => {
+                    setShowMenuForm(true);
+                    setCustomizations([]);
+                  }}
                   className="bg-orange-500 text-white px-4 py-2 rounded"
                 >
                   Add Item
@@ -114,7 +129,10 @@ export default function OwnerDashboard() {
 
                     <div className="flex gap-2 mt-3">
                       <button
-                        onClick={() => startEdit(item)}
+                        onClick={() => {
+                          startEdit(item);
+                          setCustomizations(item.customizationOptions || []);
+                        }}
                         className="flex-1 bg-blue-500 text-white py-1 rounded"
                       >
                         Edit
@@ -131,7 +149,7 @@ export default function OwnerDashboard() {
               </div>
             </div>
 
-     
+            {/* Add/Edit Menu Item Form */}
             {showMenuForm && (
               <div className="fixed inset-0 bg-black/50 flex justify-center items-center p-4 z-50">
                 <form
@@ -204,7 +222,7 @@ export default function OwnerDashboard() {
                     <option value="extra hot">Extra Hot</option>
                   </select>
 
-             
+                  {/* Nutritional Info */}
                   <div className="grid grid-cols-2 gap-2">
                     <input
                       type="number"
@@ -248,13 +266,81 @@ export default function OwnerDashboard() {
                     />
                   </div>
 
+                  {/* Customizations */}
+                  <div className="mt-3">
+                    <h4 className="font-semibold mb-2">Customizations</h4>
+                    {customizations.map((c, index) => (
+                      <div key={index} className="border p-2 rounded mb-2 space-y-1">
+                        <input
+                          type="text"
+                          placeholder="Name"
+                          value={c.name}
+                          onChange={(e) => {
+                            const updated = [...customizations];
+                            updated[index].name = e.target.value;
+                            setCustomizations(updated);
+                          }}
+                          className="w-full border p-2 rounded"
+                        />
+                        <select
+                          value={c.type}
+                          onChange={(e) => {
+                            const updated = [...customizations];
+                            updated[index].type = e.target.value;
+                            if (e.target.value !== "select") updated[index].options = [];
+                            setCustomizations(updated);
+                          }}
+                          className="w-full border p-2 rounded"
+                        >
+                          <option value="select">Select</option>
+                          <option value="boolean">Yes / No</option>
+                          <option value="text">Text</option>
+                        </select>
+                        {c.type === "select" && (
+                          <input
+                            type="text"
+                            placeholder="Options (comma separated)"
+                            value={c.options.join(",")}
+                            onChange={(e) => {
+                              const updated = [...customizations];
+                              updated[index].options = e.target.value.split(",");
+                              setCustomizations(updated);
+                            }}
+                            className="w-full border p-2 rounded"
+                          />
+                        )}
+                        <input
+                          type="number"
+                          placeholder="Extra Price"
+                          value={c.price}
+                          onChange={(e) => {
+                            const updated = [...customizations];
+                            updated[index].price = Number(e.target.value);
+                            setCustomizations(updated);
+                          }}
+                          className="w-full border p-2 rounded"
+                        />
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={handleAddCustomization}
+                      className="bg-blue-500 text-white px-3 py-1 rounded mt-2"
+                    >
+                      + Add Customization
+                    </button>
+                  </div>
+
                   <div className="flex gap-3 mt-3">
                     <button className="flex-1 bg-orange-500 text-white py-2 rounded">
                       {editingItem ? "Update" : "Add"}
                     </button>
                     <button
                       type="button"
-                      onClick={resetForm}
+                      onClick={() => {
+                        resetForm();
+                        setCustomizations([]);
+                      }}
                       className="flex-1 bg-gray-500 text-white py-2 rounded"
                     >
                       Cancel
