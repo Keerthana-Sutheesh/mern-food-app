@@ -96,12 +96,17 @@ export default function RestaurantDetails() {
   }, [id, user, isOwner]);
 
   const handleAddToCart = (item) => {
-    addToCart({
-      ...item,
-      restaurant: restaurant._id,
-      restaurantName: restaurant.name
-    });
-  };
+  addToCart({
+    menuItem: item._id,          
+    name: item.name,
+    price: item.price,
+    quantity: 1,
+    restaurant: restaurant._id,
+    restaurantName: restaurant.name,
+    customizations: item.customizations || [],
+    specialInstructions: item.specialInstructions || ""
+  });
+};
 
   const handleToggleFavorite = async () => {
     if (!user) return;
@@ -320,11 +325,13 @@ export default function RestaurantDetails() {
                       price: 0 
                     }));
 
-                  handleAddToCart({
-                    ...customizingItem,
-                    customizations: customizationsArray,
-                    specialInstructions
-                  });
+             handleAddToCart({
+  _id: customizingItem._id,
+  name: customizingItem.name,
+  price: customizingItem.price,
+  customizations: customizationsArray,
+  specialInstructions
+});
                   setCustomizingItem(null);
                   setCustomizations({});
                   setSpecialInstructions('');

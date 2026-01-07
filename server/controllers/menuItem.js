@@ -30,13 +30,20 @@ exports.getMenuByRestaurant = async (req, res) => {
   }
 };
 
-
 exports.getMenuItemById = async (req, res) => {
   try {
-    const item = await MenuItem.findById(req.params.id).lean();
+    const { id } = req.params;
+    const { restaurantId } = req.query;
+
+    const filter = { _id: id };
+    if (restaurantId) filter.restaurant = restaurantId;
+
+    const item = await MenuItem.findOne(filter).lean();
 
     if (!item) {
-      return res.status(404).json({ message: 'Menu item not found' });
+      return res.status(404).json({
+        message: 'Menu item not found for this restaurant'
+      });
     }
 
     res.status(200).json(item);
@@ -45,6 +52,23 @@ exports.getMenuItemById = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+
+
+// exports.getMenuItemById = async (req, res) => {
+//   try {
+//     const item = await MenuItem.findById(req.params.id).lean();
+
+//     if (!item) {
+//       return res.status(404).json({ message: 'Menu item not found' });
+//     }
+
+//     res.status(200).json(item);
+//   } catch (error) {
+//     console.error('Get menu item error:', error);
+//     res.status(500).json({ message: 'Server error' });
+//   }
+// };
 
 
 exports.addMenuItem = async (req, res) => {
