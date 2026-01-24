@@ -35,10 +35,10 @@ export default function CreateRestaurant() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
-      <div className="max-w-md mx-auto bg-white p-8 rounded-xl shadow-lg">
-        <h1 className="text-2xl font-bold mb-6 text-center">
-          {existingRestaurant ? "Update Restaurant" : "Create Restaurant"}
+    <div className="min-h-screen bg-white dark:bg-gray-900 py-12 px-4">
+      <div className="max-w-md mx-auto bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg dark:shadow-2xl border border-gray-200 dark:border-gray-700">
+        <h1 className="text-3xl font-bold mb-6 text-center text-gray-900 dark:text-white">
+          {existingRestaurant ? "🏪 Update Restaurant" : "🏪 Create Restaurant"}
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -48,7 +48,7 @@ export default function CreateRestaurant() {
             onChange={handleChange}
             placeholder="Restaurant Name"
             required
-            className="w-full border p-2 rounded"
+            className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
           />
 
           <input
@@ -57,7 +57,7 @@ export default function CreateRestaurant() {
             onChange={handleChange}
             placeholder="Address"
             required
-            className="w-full border p-2 rounded"
+            className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
           />
 
           <select
@@ -65,7 +65,7 @@ export default function CreateRestaurant() {
             value={form.cuisine}
             onChange={handleChange}
             required
-            className="w-full border p-2 rounded"
+            className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           >
             <option value="">Select Cuisine</option>
             <option value="Indian">Indian</option>
@@ -78,7 +78,7 @@ export default function CreateRestaurant() {
             value={form.description}
             onChange={handleChange}
             placeholder="Description"
-            className="w-full border p-2 rounded"
+            className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
           />
 
        
@@ -92,30 +92,38 @@ export default function CreateRestaurant() {
                 e.target.value = "";
               }
             }}
-            className="w-full border p-2 rounded"
+            className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
           />
 
-          {form.services.map((s, i) => (
-            <span key={i} className="inline-block mr-2">
-              {s}{" "}
-              <button type="button" onClick={() => removeArrayItem("services", i)}>
-                ×
-              </button>
-            </span>
-          ))}
+          {form.services.length > 0 && (
+            <div className="flex flex-wrap gap-2 p-3 bg-gray-50 dark:bg-gray-700/50 rounded border border-gray-200 dark:border-gray-600">
+              {form.services.map((s, i) => (
+                <span key={i} className="inline-flex items-center gap-1 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 px-3 py-1 rounded-full font-medium">
+                  {s}
+                  <button 
+                    type="button" 
+                    onClick={() => removeArrayItem("services", i)}
+                    className="ml-1 hover:text-orange-900 dark:hover:text-orange-400"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
 
-          {error && <p className="text-red-500">{error}</p>}
-          {success && <p className="text-green-500">{success}</p>}
+          {error && <p className="text-red-600 dark:text-red-400 font-semibold bg-red-50 dark:bg-red-900/20 p-3 rounded border border-red-200 dark:border-red-800">❌ {error}</p>}
+          {success && <p className="text-green-600 dark:text-green-400 font-semibold bg-green-50 dark:bg-green-900/20 p-3 rounded border border-green-200 dark:border-green-800">✅ {success}</p>}
 
           <button
             disabled={loading}
-            className="w-full bg-orange-500 text-white py-2 rounded"
+            className="w-full bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 text-white py-3 rounded font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "Saving..." : "Save"}
+            {loading ? "⏳ Saving..." : "💾 Save"}
           </button>
         </form>
 
-        <Link to="/owner" className="block text-center mt-4 text-orange-600">
+        <Link to="/owner" className="block text-center mt-4 text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 font-semibold transition-colors">
           ← Back to Dashboard
         </Link>
       </div>

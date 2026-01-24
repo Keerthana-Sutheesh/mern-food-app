@@ -11,6 +11,13 @@ router.put('/notifications', userController.updateNotifications);
 router.get('/orders', userController.getOrderHistory);
 router.get('/orders/:orderId', userController.getOrderDetails);
 
+// Address Management Routes
+router.post('/addresses', userController.addAddress);
+router.get('/addresses', userController.getAddresses);
+router.put('/addresses/:addressId', userController.updateAddress);
+router.delete('/addresses/:addressId', userController.deleteAddress);
+router.put('/addresses/:addressId/default', userController.setDefaultAddress);
+
 router.post('/forgot-password', userController.forgotPassword);
 router.post('/reset-password', userController.resetPassword);
 

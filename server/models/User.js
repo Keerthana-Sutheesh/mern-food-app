@@ -55,6 +55,45 @@ const userSchema = new mongoose.Schema({
     country: { type: String, default: "India" }
   },
 
+  addresses: [
+    {
+      _id: { type: mongoose.Schema.Types.ObjectId, auto: true },
+      label: {
+        type: String,
+        required: true,
+        enum: ["Home", "Office", "Other"]
+      },
+      street: {
+        type: String,
+        required: true
+      },
+      city: {
+        type: String,
+        required: true
+      },
+      state: {
+        type: String,
+        required: true
+      },
+      zipCode: {
+        type: String,
+        required: true
+      },
+      country: {
+        type: String,
+        default: "India"
+      },
+      isDefault: {
+        type: Boolean,
+        default: false
+      },
+      createdAt: {
+        type: Date,
+        default: Date.now
+      }
+    }
+  ],
+
   isActive: {
     type: Boolean,
     default: true

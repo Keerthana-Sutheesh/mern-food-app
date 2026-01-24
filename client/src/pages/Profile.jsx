@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/auth';
 import api from '../api/api';
+import AddressManager from '../components/AddressManager';
 
 const Profile = () => {
   const { user, setUser } = useAuth();
@@ -10,13 +11,6 @@ const Profile = () => {
     phone: '',
     dateOfBirth: '',
     gender: '',
-    address: {
-      street: '',
-      city: '',
-      state: '',
-      zipCode: '',
-      country: 'India'
-    },
     preferences: {
       language: 'en',
       currency: 'INR',
@@ -56,13 +50,6 @@ const Profile = () => {
         phone: user.phone || '',
         dateOfBirth: user.dateOfBirth ? user.dateOfBirth.split('T')[0] : '',
         gender: user.gender || '',
-        address: user.address || {
-          street: '',
-          city: '',
-          state: '',
-          zipCode: '',
-          country: 'India'
-        },
         preferences: user.preferences || {
           language: 'en',
           currency: 'INR',
@@ -154,16 +141,6 @@ const Profile = () => {
     }));
   };
 
-  const handleAddressChange = (field, value) => {
-    setProfileData(prev => ({
-      ...prev,
-      address: {
-        ...prev.address,
-        [field]: value
-      }
-    }));
-  };
-
   const handlePreferenceChange = (field, value) => {
     setProfileData(prev => ({
       ...prev,
@@ -175,48 +152,48 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-white dark:bg-dark-bg py-8 transition-colors duration-300">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-          <div className="px-6 py-4 bg-gray-800 text-white">
-            <h1 className="text-2xl font-bold">Profile Settings</h1>
-            <p className="text-gray-300">Manage your account information and preferences</p>
+        <div className="bg-white dark:bg-gray-800 shadow-xl dark:shadow-2xl rounded-xl overflow-hidden transition-colors duration-300">
+          <div className="px-6 py-6 bg-gradient-to-r from-orange-300 to-orange-500 dark:from-orange-700 dark:to-orange-800 text-white dark:text-gray-900 shadow-lg">
+            <h1 className="text-3xl font-bold">👤 Profile Settings</h1>
+            <p className="text-gray-800 dark:text-gray-900 mt-1">Manage your account information and preferences</p>
           </div>
 
           <div className="p-6 space-y-8">
-          
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Personal Information</h2>
+   
+            <div className="border-b dark:border-gray-700 pb-8">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">📋 Personal Information</h2>
               <form onSubmit={handleProfileSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Full Name</label>
                     <input
                       type="text"
                       value={profileData.name}
                       onChange={(e) => handleInputChange('name', e.target.value)}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Phone Number</label>
                     <input
                       type="tel"
                       value={profileData.phone}
                       onChange={(e) => handleInputChange('phone', e.target.value)}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Date of Birth</label>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Date of Birth</label>
                     <input
                       type="date"
                       value={profileData.dateOfBirth}
                       onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors"
                     />
                   </div>
 
@@ -237,62 +214,6 @@ const Profile = () => {
                 </div>
 
                
-                <div className="border-t pt-4">
-                  <h3 className="text-lg font-medium text-gray-900 mb-3">Address</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700">Street Address</label>
-                      <input
-                        type="text"
-                        value={profileData.address.street}
-                        onChange={(e) => handleAddressChange('street', e.target.value)}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">City</label>
-                      <input
-                        type="text"
-                        value={profileData.address.city}
-                        onChange={(e) => handleAddressChange('city', e.target.value)}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">State</label>
-                      <input
-                        type="text"
-                        value={profileData.address.state}
-                        onChange={(e) => handleAddressChange('state', e.target.value)}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">ZIP Code</label>
-                      <input
-                        type="text"
-                        value={profileData.address.zipCode}
-                        onChange={(e) => handleAddressChange('zipCode', e.target.value)}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Country</label>
-                      <input
-                        type="text"
-                        value={profileData.address.country}
-                        onChange={(e) => handleAddressChange('country', e.target.value)}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-             
                 <div className="border-t pt-4">
                   <h3 className="text-lg font-medium text-gray-900 mb-3">Preferences</h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -409,11 +330,12 @@ const Profile = () => {
               </form>
             </div>
 
-          
+           
             <div className="border-t pt-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Notification Preferences</h2>
+              <AddressManager />
+            </div>
 
-             
+            <div className="border-t pt-6">
               <div className="mb-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-3">Email Notifications</h3>
                 <div className="space-y-3">

@@ -53,61 +53,62 @@ export default function OwnerDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
         <div className="animate-spin h-12 w-12 border-b-2 border-orange-500 rounded-full"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8">Restaurant Dashboard</h1>
+        <h1 className="text-4xl font-bold mb-8 text-gray-900 dark:text-white">🍽️ Restaurant Dashboard</h1>
 
         {!restaurant ? (
           <Link
             to="/owner/create-restaurant"
-            className="bg-orange-500 text-white px-6 py-3 rounded-lg"
+            className="bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors inline-block"
           >
-            Create Restaurant
+            ➕ Create Restaurant
           </Link>
         ) : (
           <>
-            <div className="bg-white p-6 rounded-lg shadow mb-8">
-              <h2 className="text-2xl font-bold">{restaurant.name}</h2>
-              <p className="text-gray-600">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow dark:shadow-lg mb-8 border border-gray-200 dark:border-gray-700">
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white">{restaurant.name}</h2>
+              <p className="text-gray-600 dark:text-gray-400 font-medium mt-2">
                 {restaurant.cuisine} • {restaurant.address}
               </p>
             </div>
 
-            <div className="bg-white rounded-lg shadow mb-8">
-              <div className="p-6 flex justify-between items-center border-b">
-                <h3 className="text-xl font-semibold">Menu</h3>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-lg mb-8">
+              <div className="p-6 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">📋 Menu</h3>
                 <button
                   onClick={() => {
                     setShowMenuForm(true);
                     setCustomizations([]);
                   }}
-                  className="bg-orange-500 text-white px-4 py-2 rounded"
+                  className="bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
                 >
-                  Add Item
+                  ➕ Add Item
                 </button>
               </div>
 
               <div className="p-6 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {menuItems.map((item) => (
-                  <div key={item._id} className="border p-4 rounded">
-                    <h4 className="font-semibold">{item.name}</h4>
-                    <p className="text-orange-600 font-bold">₹{item.price}</p>
+                  <div key={item._id} className="border border-gray-200 dark:border-gray-700 p-5 rounded-lg bg-white dark:bg-gray-700/50 hover:shadow-md dark:hover:shadow-lg transition-shadow">
+                    <h4 className="font-bold text-lg text-gray-900 dark:text-white">{item.name}</h4>
+                    <p className="text-orange-600 dark:text-orange-400 font-bold text-lg">₹{item.price}</p>
 
                     {item.description && (
-                      <p className="text-gray-600 text-sm mt-1">{item.description}</p>
+                      <p className="text-gray-700 dark:text-gray-300 text-sm mt-2 font-medium">{item.description}</p>
                     )}
 
                     {item.nutritionalInfo &&
                       Object.values(item.nutritionalInfo).some(v => v > 0) && (
-                        <div className="mt-2 p-2 bg-gray-50 rounded text-xs">
-                          <div className="grid grid-cols-2 gap-1 text-gray-600">
+                        <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg text-xs border border-gray-200 dark:border-gray-600">
+                          <p className="font-bold text-gray-800 dark:text-gray-300 mb-2">📊 Nutrition</p>
+                          <div className="grid grid-cols-2 gap-2 text-gray-700 dark:text-gray-300 font-medium">
                             {item.nutritionalInfo.calories > 0 && (
                               <span>🔥 {item.nutritionalInfo.calories} cal</span>
                             )}
@@ -127,21 +128,21 @@ export default function OwnerDashboard() {
                         </div>
                       )}
 
-                    <div className="flex gap-2 mt-3">
+                    <div className="flex gap-2 mt-4">
                       <button
                         onClick={() => {
                           startEdit(item);
                           setCustomizations(item.customizationOptions || []);
                         }}
-                        className="flex-1 bg-blue-500 text-white py-1 rounded"
+                        className="flex-1 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white py-2 rounded font-semibold transition-colors"
                       >
-                        Edit
+                        ✏️ Edit
                       </button>
                       <button
                         onClick={() => handleDelete(item._id)}
-                        className="flex-1 bg-red-500 text-white py-1 rounded"
+                        className="flex-1 bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white py-2 rounded font-semibold transition-colors"
                       >
-                        Delete
+                        🗑️ Delete
                       </button>
                     </div>
                   </div>
@@ -154,10 +155,10 @@ export default function OwnerDashboard() {
               <div className="fixed inset-0 bg-black/50 flex justify-center items-center p-4 z-50">
                 <form
                   onSubmit={handleSubmit}
-                  className="bg-white p-6 rounded w-full max-w-md space-y-3 max-h-[90vh] overflow-y-auto"
+                  className="bg-white dark:bg-gray-800 p-6 rounded-lg w-full max-w-md space-y-3 max-h-[90vh] overflow-y-auto shadow-2xl"
                 >
-                  <h3 className="text-xl font-semibold">
-                    {editingItem ? "Edit Item" : "Add Menu Item"}
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                    {editingItem ? "✏️ Edit Item" : "➕ Add Menu Item"}
                   </h3>
 
                   <input
@@ -166,7 +167,7 @@ export default function OwnerDashboard() {
                     onChange={handleChange}
                     placeholder="Name"
                     required
-                    className="w-full border p-2 rounded"
+                    className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   />
 
                   <textarea
@@ -174,7 +175,7 @@ export default function OwnerDashboard() {
                     value={menuForm.description}
                     onChange={handleChange}
                     placeholder="Description"
-                    className="w-full border p-2 rounded"
+                    className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   />
 
                   <input
@@ -184,14 +185,14 @@ export default function OwnerDashboard() {
                     onChange={handleChange}
                     placeholder="Price"
                     required
-                    className="w-full border p-2 rounded"
+                    className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   />
 
                   <select
                     name="category"
                     value={menuForm.category}
                     onChange={handleChange}
-                    className="w-full border p-2 rounded"
+                    className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   >
                     <option value="appetizer">Appetizer</option>
                     <option value="main">Main</option>
@@ -203,7 +204,7 @@ export default function OwnerDashboard() {
                     name="dietType"
                     value={menuForm.dietType || 'non-veg'}
                     onChange={handleChange}
-                    className="w-full p-2 border rounded"
+                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   >
                     <option value="non-veg">Non-Vegetarian</option>
                     <option value="vegetarian">Vegetarian</option>
@@ -214,7 +215,7 @@ export default function OwnerDashboard() {
                     name="spicyLevel"
                     value={menuForm.spicyLevel}
                     onChange={handleChange}
-                    className="w-full border p-2 rounded"
+                    className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   >
                     <option value="mild">Mild</option>
                     <option value="medium">Medium</option>
@@ -223,14 +224,15 @@ export default function OwnerDashboard() {
                   </select>
 
                   {/* Nutritional Info */}
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-2 border-t border-gray-200 dark:border-gray-700 pt-3">
+                    <label className="text-sm font-bold text-gray-900 dark:text-white col-span-2">📊 Nutritional Info</label>
                     <input
                       type="number"
                       name="nutritionalInfo.calories"
                       value={menuForm.nutritionalInfo.calories}
                       onChange={handleChange}
                       placeholder="Calories"
-                      className="w-full border p-2 rounded"
+                      className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     />
                     <input
                       type="number"
@@ -238,7 +240,7 @@ export default function OwnerDashboard() {
                       value={menuForm.nutritionalInfo.protein}
                       onChange={handleChange}
                       placeholder="Protein (g)"
-                      className="w-full border p-2 rounded"
+                      className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     />
                     <input
                       type="number"
@@ -246,7 +248,7 @@ export default function OwnerDashboard() {
                       value={menuForm.nutritionalInfo.carbs}
                       onChange={handleChange}
                       placeholder="Carbs (g)"
-                      className="w-full border p-2 rounded"
+                      className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     />
                     <input
                       type="number"
@@ -254,7 +256,7 @@ export default function OwnerDashboard() {
                       value={menuForm.nutritionalInfo.fat}
                       onChange={handleChange}
                       placeholder="Fat (g)"
-                      className="w-full border p-2 rounded"
+                      className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     />
                     <input
                       type="number"
@@ -262,15 +264,15 @@ export default function OwnerDashboard() {
                       value={menuForm.nutritionalInfo.fiber}
                       onChange={handleChange}
                       placeholder="Fiber (g)"
-                      className="w-full border p-2 rounded"
+                      className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     />
                   </div>
 
                   {/* Customizations */}
-                  <div className="mt-3">
-                    <h4 className="font-semibold mb-2">Customizations</h4>
+                  <div className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-3">
+                    <h4 className="font-bold text-gray-900 dark:text-white mb-3">⚙️ Customizations</h4>
                     {customizations.map((c, index) => (
-                      <div key={index} className="border p-2 rounded mb-2 space-y-1">
+                      <div key={index} className="border border-gray-300 dark:border-gray-600 p-3 rounded mb-2 space-y-2 bg-gray-50 dark:bg-gray-700/50">
                         <input
                           type="text"
                           placeholder="Name"
@@ -280,7 +282,7 @@ export default function OwnerDashboard() {
                             updated[index].name = e.target.value;
                             setCustomizations(updated);
                           }}
-                          className="w-full border p-2 rounded"
+                          className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                         />
                         <select
                           value={c.type}
@@ -290,7 +292,7 @@ export default function OwnerDashboard() {
                             if (e.target.value !== "select") updated[index].options = [];
                             setCustomizations(updated);
                           }}
-                          className="w-full border p-2 rounded"
+                          className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         >
                           <option value="select">Select</option>
                           <option value="boolean">Yes / No</option>
@@ -306,7 +308,7 @@ export default function OwnerDashboard() {
                               updated[index].options = e.target.value.split(",");
                               setCustomizations(updated);
                             }}
-                            className="w-full border p-2 rounded"
+                            className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                           />
                         )}
                         <input
@@ -318,22 +320,22 @@ export default function OwnerDashboard() {
                             updated[index].price = Number(e.target.value);
                             setCustomizations(updated);
                           }}
-                          className="w-full border p-2 rounded"
+                          className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                         />
                       </div>
                     ))}
                     <button
                       type="button"
                       onClick={handleAddCustomization}
-                      className="bg-blue-500 text-white px-3 py-1 rounded mt-2"
+                      className="bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white px-4 py-2 rounded font-semibold transition-colors mt-2 w-full"
                     >
-                      + Add Customization
+                      ➕ Add Customization
                     </button>
                   </div>
 
-                  <div className="flex gap-3 mt-3">
-                    <button className="flex-1 bg-orange-500 text-white py-2 rounded">
-                      {editingItem ? "Update" : "Add"}
+                  <div className="flex gap-3 mt-4 border-t border-gray-200 dark:border-gray-700 pt-3">
+                    <button className="flex-1 bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 text-white py-2 rounded font-semibold transition-colors">
+                      {editingItem ? "💾 Update" : "➕ Add"}
                     </button>
                     <button
                       type="button"
@@ -341,9 +343,9 @@ export default function OwnerDashboard() {
                         resetForm();
                         setCustomizations([]);
                       }}
-                      className="flex-1 bg-gray-500 text-white py-2 rounded"
+                      className="flex-1 bg-gray-500 hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-700 text-white py-2 rounded font-semibold transition-colors"
                     >
-                      Cancel
+                      ❌ Cancel
                     </button>
                   </div>
                 </form>

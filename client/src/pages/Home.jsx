@@ -60,16 +60,16 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
    
-      <div className="bg-white shadow">
-        <div className="max-w-6xl mx-auto px-4 py-6 flex justify-between">
-          <h1 className="text-2xl font-bold">Welcome, {user.name}</h1>
+      <div className="bg-white dark:bg-gray-800 shadow dark:shadow-lg">
+        <div className="max-w-6xl mx-auto px-4 py-6 flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Welcome, {user.name}</h1>
           <button
             onClick={() => navigate("/cart")}
-            className="bg-orange-500 text-white px-4 py-2 rounded"
+            className="bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
           >
-            Cart ({getTotalItems()})
+            🛒 Cart ({getTotalItems()})
           </button>
         </div>
       </div>
@@ -83,7 +83,7 @@ export default function Home() {
               setFilters((f) => ({ ...f, searchTerm: e.target.value }))
             }
             placeholder="Search restaurants..."
-            className="flex-1 border px-4 py-2 rounded"
+            className="flex-1 border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
           />
 
           <select
@@ -91,7 +91,7 @@ export default function Home() {
             onChange={(e) =>
               setFilters((f) => ({ ...f, selectedCuisine: e.target.value }))
             }
-            className="border px-4 py-2 rounded"
+            className="border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
           >
             <option value="">All cuisines</option>
             {cuisines.map((c) => (
@@ -105,7 +105,7 @@ export default function Home() {
               const [sortBy, sortOrder] = e.target.value.split('-');
               setFilters((f) => ({ ...f, sortBy, sortOrder }));
             }}
-            className="border px-4 py-2 rounded"
+            className="border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
           >
             <option value="createdAt-desc">Newest First</option>
             <option value="rating-desc">Highest Rated</option>
@@ -115,7 +115,7 @@ export default function Home() {
 
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="bg-gray-200 px-4 py-2 rounded"
+            className="bg-gray-200 dark:bg-gray-700 dark:text-white px-4 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
           >
             Filters
           </button>
@@ -129,23 +129,24 @@ export default function Home() {
             <div
               key={r._id}
               onClick={() => navigate(`/restaurant/${r._id.toString()}`)}
-              className="bg-white p-4 rounded shadow cursor-pointer"
+              className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow dark:shadow-lg cursor-pointer hover:shadow-md dark:hover:shadow-xl transition-shadow"
             >
-              <div className="flex justify-between">
-                <h3 className="font-semibold">{r.name}</h3>
+              <div className="flex justify-between items-start mb-3">
+                <h3 className="font-bold text-lg text-gray-900 dark:text-white">{r.name}</h3>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     toggleFavorite(r._id);
                   }}
+                  className="text-2xl"
                 >
                   {favorites.has(r._id) ? "❤️" : "🤍"}
                 </button>
               </div>
 
-              <p className="text-sm text-gray-600">{r.cuisine}</p>
-              <p className="text-sm">⭐ {r.rating || "New"}</p>
-              <p className="text-sm">₹{r.deliveryFee} delivery</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">{r.cuisine}</p>
+              <p className="text-sm font-semibold text-gray-900 dark:text-white mb-2">⭐ {r.rating || "New"}</p>
+              <p className="text-sm font-medium text-orange-600 dark:text-orange-400">₹{r.deliveryFee} delivery</p>
             </div>
           ))}
         </div>

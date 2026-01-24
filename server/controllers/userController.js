@@ -21,6 +21,181 @@ exports.getProfile = async (req, res) => {
   }
 };
 
+// ADDRESS MANAGEMENT - ADD ADDRESS
+exports.addAddress = async (req, res) => {
+  try {
+    const { label, street, city, state, zipCode, country, isDefault } = req.body;
+
+    // Validate required fields
+    if (!label || !street || !city || !state || !zipCode || !country) {
+      return res.status(400).json({ message: 'All address fields are required' });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // First address is always default, or if explicitly marked as default
+    const shouldBeDefault = user.addresses.length === 0 || isDefault;
+
+    // If marking as default, unset default from all others
+    if (shouldBeDefault) {
+      user.addresses.forEach(addr => addr.isDefault = false);
+    }
+
+    const newAddress = {
+      label,
+      street: street.trim(),
+      city: city.trim(),
+      state: state.trim(),
+      zipCode: zipCode.trim(),
+      country: country.trim() || 'India',
+      isDefault: shouldBeDefault,
+      createdAt: new Date()
+    };
+
+    user.addresses.push(newAddress);
+    await user.save();
+
+    res.status(201).json({
+      message: 'Address added successfully',
+      address: newAddress
+    });
+
+  } catch (error) {
+    console.error('Error adding address:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// ADDRESS MANAGEMENT - GET ALL ADDRESSES
+exports.getAddresses = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('addresses').lean();
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({
+      addresses: user.addresses || []
+    });
+
+  } catch (error) {
+    console.error('Error fetching addresses:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// ADDRESS MANAGEMENT - UPDATE ADDRESS
+exports.updateAddress = async (req, res) => {
+  try {
+    const { addressId } = req.params;
+    const { label, street, city, state, zipCode, country, isDefault } = req.body;
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const address = user.addresses.id(addressId);
+    if (!address) {
+      return res.status(404).json({ message: 'Address not found' });
+    }
+
+    // Update fields
+    if (label) address.label = label;
+    if (street) address.street = street.trim();
+    if (city) address.city = city.trim();
+    if (state) address.state = state.trim();
+    if (zipCode) address.zipCode = zipCode.trim();
+    if (country) address.country = country.trim();
+
+    // Handle default address
+    if (isDefault) {
+      user.addresses.forEach(addr => addr.isDefault = false);
+      address.isDefault = true;
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      message: 'Address updated successfully',
+      address
+    });
+
+  } catch (error) {
+    console.error('Error updating address:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// ADDRESS MANAGEMENT - DELETE ADDRESS
+exports.deleteAddress = async (req, res) => {
+  try {
+    const { addressId } = req.params;
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const addressIndex = user.addresses.findIndex(addr => addr._id.toString() === addressId);
+    if (addressIndex === -1) {
+      return res.status(404).json({ message: 'Address not found' });
+    }
+
+    const wasDefault = user.addresses[addressIndex].isDefault;
+    user.addresses.splice(addressIndex, 1);
+
+    // If deleted address was default, set first remaining as default
+    if (wasDefault && user.addresses.length > 0) {
+      user.addresses[0].isDefault = true;
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      message: 'Address deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('Error deleting address:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// ADDRESS MANAGEMENT - SET DEFAULT ADDRESS
+exports.setDefaultAddress = async (req, res) => {
+  try {
+    const { addressId } = req.params;
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const address = user.addresses.id(addressId);
+    if (!address) {
+      return res.status(404).json({ message: 'Address not found' });
+    }
+
+    user.addresses.forEach(addr => addr.isDefault = false);
+    address.isDefault = true;
+
+    await user.save();
+
+    res.status(200).json({
+      message: 'Default address updated',
+      address
+    });
+
+  } catch (error) {
+    console.error('Error setting default address:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
 
 exports.updateProfile = async (req, res) => {
   try {
@@ -29,13 +204,11 @@ exports.updateProfile = async (req, res) => {
       phone,
       dateOfBirth,
       gender,
-      address,
       preferences,
       avatar
     } = req.body;
 
     const updateData = {};
-
 
     if (name) updateData.name = name.trim();
     if (phone !== undefined) updateData.phone = phone ? phone.trim() : null;
@@ -43,18 +216,6 @@ exports.updateProfile = async (req, res) => {
     if (gender) updateData.gender = gender;
     if (avatar !== undefined) updateData.avatar = avatar;
 
-
-    if (address) {
-      updateData.address = {
-        street: address.street?.trim(),
-        city: address.city?.trim(),
-        state: address.state?.trim(),
-        zipCode: address.zipCode?.trim(),
-        country: address.country?.trim() || 'India'
-      };
-    }
-
-  
     if (preferences) {
       updateData.preferences = {
         language: preferences.language || 'en',
@@ -174,7 +335,6 @@ exports.updateNotifications = async (req, res) => {
   }
 };
 
-
 exports.getOrderHistory = async (req, res) => {
   try {
     const { page = 1, limit = 10, status } = req.query;
@@ -261,14 +421,12 @@ exports.getOrderDetails = async (req, res) => {
   }
 };
 
-
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
 
     const user = await User.findOne({ email });
     if (!user) {
-   
       return res.status(200).json({
         message: 'If an account with that email exists, a password reset link has been sent.'
       });
@@ -284,9 +442,7 @@ exports.forgotPassword = async (req, res) => {
     console.log('Password reset token:', resetToken);
 
     res.status(200).json({
-      message: 'If an account with that email exists, a password reset link has been sent.',
-
-     // resetToken
+      message: 'If an account with that email exists, a password reset link has been sent.'
     });
 
   } catch (error) {
@@ -318,7 +474,6 @@ exports.resetPassword = async (req, res) => {
       return res.status(400).json({ message: 'Invalid or expired reset token' });
     }
 
-
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
     user.passwordResetToken = undefined;
@@ -349,8 +504,7 @@ exports.sendEmailVerification = async (req, res) => {
     console.log('Email verification token:', verificationToken);
 
     res.status(200).json({
-      message: 'Verification email sent',
- 
+      message: 'Verification email sent'
     });
 
   } catch (error) {
@@ -358,7 +512,6 @@ exports.sendEmailVerification = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
-
 
 exports.verifyEmail = async (req, res) => {
   try {
@@ -402,7 +555,6 @@ exports.deleteAccount = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
-
 
 exports.getUserStats = async (req, res) => {
   try {
