@@ -61,11 +61,18 @@ const orderSchema = new mongoose.Schema({
     type: Date
   },
   deliveryAddress: {
-    addressLine: String,
-    city: String,
+    addressLine: {
+      type: String
+    },
+    city: {
+      type: String
+    },
     lat: Number,
     lng: Number
   },
+  // Note: addressLine and city were made optional to prevent server errors when client
+  // does not send fully shaped address. Controller now attempts to fallback to user's
+  // saved address; prefer validating on client-side before sending.
   statusHistory: [{
     status: {
       type: String,

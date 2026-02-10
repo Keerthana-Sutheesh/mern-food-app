@@ -3,7 +3,7 @@ const MenuItem = require('../models/MenuItem');
 
 exports.getCart = async (req, res) => {
   try {
-    const cart = await Cart.findOne({ user: req.user.id })
+    const cart = await Cart.findOne({ user: req.user._id })
       .populate('items.menuItem');
 
     res.status(200).json(cart || { items: [] });
@@ -21,11 +21,11 @@ exports.addToCart = async (req, res) => {
       return res.status(404).json({ message: 'Menu item not available' });
     }
 
-    let cart = await Cart.findOne({ user: req.user.id });
+    let cart = await Cart.findOne({ user: req.user._id });
 
     if (!cart) {
       cart = await Cart.create({
-        user: req.user.id,
+        user: req.user._id,
         items: []
       });
     }
@@ -71,7 +71,7 @@ exports.updateCartItem = async (req, res) => {
   try {
     const { menuItemId, quantity } = req.body;
 
-    const cart = await Cart.findOne({ user: req.user.id });
+    const cart = await Cart.findOne({ user: req.user._id });
     if (!cart) {
       return res.status(404).json({ message: 'Cart not found' });
     }
@@ -97,7 +97,7 @@ exports.updateCartItem = async (req, res) => {
 
 exports.removeCartItem = async (req, res) => {
   try {
-    const cart = await Cart.findOne({ user: req.user.id });
+    const cart = await Cart.findOne({ user: req.user._id });
     if (!cart) {
       return res.status(404).json({ message: 'Cart not found' });
     }
@@ -118,7 +118,7 @@ exports.removeCartItem = async (req, res) => {
 exports.clearCart = async (req, res) => {
   try {
     await Cart.findOneAndUpdate(
-      { user: req.user.id },
+      { user: req.user._id },
       { items: [] }
     );
 

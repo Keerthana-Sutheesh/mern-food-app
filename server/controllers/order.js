@@ -1,8 +1,9 @@
 const Order = require('../models/Order');
+const User = require('../models/User');
 
 exports.createOrder = async (req, res) => {
   try {
-    const { restaurantId, paymentMethod, deliveryAddress, cartItems } = req.body;
+    const { restaurantId, paymentMethod = 'COD', deliveryAddress, cartItems } = req.body;
 
     if (!cartItems || cartItems.length === 0) {
       return res.status(400).json({ message: 'Cart is empty' });
@@ -35,13 +36,76 @@ exports.createOrder = async (req, res) => {
 
     const estimatedDeliveryTime = new Date(Date.now() + (30 + Math.random() * 15) * 60 * 1000);
 
+    // Log incoming payload to help debugging
+    console.log('createOrder body:', JSON.stringify(req.body));
+
+    // Build delivery address from request or fallbacks
+    let deliveryAddrForModel = {};
+    
+    // 1. Try to use provided deliveryAddress
+    if (deliveryAddress && typeof deliveryAddress === 'object' && Object.keys(deliveryAddress).length > 0) {
+      const parts = [];
+      if (deliveryAddress.addressLine) parts.push(deliveryAddress.addressLine);
+      if (deliveryAddress.addressLine1) parts.push(deliveryAddress.addressLine1);
+      if (deliveryAddress.street) parts.push(deliveryAddress.street);
+      if (deliveryAddress.city) deliveryAddrForModel.city = deliveryAddress.city;
+      if (deliveryAddress.town && !deliveryAddrForModel.city) deliveryAddrForModel.city = deliveryAddress.town;
+      if (deliveryAddress.state && !deliveryAddrForModel.city) deliveryAddrForModel.city = deliveryAddress.state;
+      if (deliveryAddress.zipCode) parts.push(deliveryAddress.zipCode);
+      if (deliveryAddress.country) parts.push(deliveryAddress.country);
+
+      if (parts.length > 0) {
+        deliveryAddrForModel.addressLine = parts.join(', ').trim();
+      }
+      if (deliveryAddress.lat) deliveryAddrForModel.lat = deliveryAddress.lat;
+      if (deliveryAddress.lng) deliveryAddrForModel.lng = deliveryAddress.lng;
+    }
+    
+    // 2. If still missing, try to get user's saved address
+    if (!deliveryAddrForModel.addressLine && !deliveryAddrForModel.city) {
+      try {
+        const fullUser = await User.findById(req.user._id).select('addresses address');
+        if (fullUser && fullUser.addresses && fullUser.addresses.length > 0) {
+          const defaultAddr = fullUser.addresses.find(a => a.isDefault) || fullUser.addresses[0];
+          if (defaultAddr) {
+            const parts = [];
+            if (defaultAddr.street) parts.push(defaultAddr.street);
+            if (defaultAddr.city) {
+              deliveryAddrForModel.city = defaultAddr.city;
+            }
+            if (defaultAddr.state) parts.push(defaultAddr.state);
+            if (defaultAddr.zipCode) parts.push(defaultAddr.zipCode);
+            if (defaultAddr.country) parts.push(defaultAddr.country);
+            if (parts.length > 0) {
+              deliveryAddrForModel.addressLine = parts.join(', ').trim();
+            }
+          }
+        } else if (fullUser && fullUser.address) {
+          // Fallback to old-style address object
+          const parts = [];
+          if (fullUser.address.street) parts.push(fullUser.address.street);
+          if (fullUser.address.city) deliveryAddrForModel.city = fullUser.address.city;
+          if (fullUser.address.state) parts.push(fullUser.address.state);
+          if (fullUser.address.zipCode) parts.push(fullUser.address.zipCode);
+          if (fullUser.address.country) parts.push(fullUser.address.country);
+          if (parts.length > 0) {
+            deliveryAddrForModel.addressLine = parts.join(', ').trim();
+          }
+        }
+      } catch (e) {
+        console.warn('Could not load user saved address:', e.message);
+      }
+    }
+
+    console.log('Final deliveryAddr:', JSON.stringify(deliveryAddrForModel));
+
     const order = await Order.create({
-      user: req.user.id,
-      restaurant: restaurantId,
+      user: req.user._id,
+      restaurant: restaurantId || (cartItems[0] && cartItems[0].restaurant),
       items: orderItems,
       totalAmount,
       paymentMethod,
-      deliveryAddress,
+      deliveryAddress: deliveryAddrForModel,
       estimatedDeliveryTime,
       statusHistory: [{
         status: 'placed',
@@ -59,8 +123,13 @@ exports.createOrder = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Order creation error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Order creation error:', error.message, error.stack);
+    if (error.name === 'ValidationError') {
+      // Return 400 for Mongoose validation errors with details
+      const messages = Object.values(error.errors || {}).map(e => e.message);
+      return res.status(400).json({ message: 'Validation error', errors: messages });
+    }
+    res.status(500).json({ message: error.message || 'Server error', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -85,7 +154,7 @@ exports.getOrders = async (req, res) => {
     let filter = {};
 
     if (req.user.role === 'user') {
-      filter.user = req.user.id;
+      filter.user = req.user._id;
     }
 
     const orders = await Order.find(filter)
@@ -102,7 +171,7 @@ exports.getCurrentOrder = async (req, res) => {
     const { restaurantId } = req.params;
 
     const order = await Order.findOne({
-      user: req.user.id,
+      user: req.user._id,
       restaurant: restaurantId
     })
     .sort({ createdAt: -1 })
@@ -129,7 +198,7 @@ exports.getOrderNotifications = async (req, res) => {
     }
 
 
-    if (order.user.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (order.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Access denied' });
     }
 
@@ -229,7 +298,7 @@ exports.markNotificationAsRead = async (req, res) => {
       return res.status(404).json({ message: 'Order not found' });
     }
 
-    if (order.user.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (order.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Access denied' });
     }
 
@@ -248,7 +317,7 @@ exports.markNotificationAsRead = async (req, res) => {
 
 exports.getUserNotifications = async (req, res) => {
   try {
-    const orders = await Order.find({ user: req.user.id })
+    const orders = await Order.find({ user: req.user._id })
       .select('notifications orderStatus')
       .sort({ createdAt: -1 });
 

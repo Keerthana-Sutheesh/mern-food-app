@@ -4,6 +4,92 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 
+const parseBoolean = (value) => {
+  if (value === undefined) return undefined;
+  if (typeof value === 'boolean') return value;
+  if (value === 'true') return true;
+  if (value === 'false') return false;
+  return null;
+};
+
+const normalizeAddressFields = (data) => ({
+  label: typeof data.label === 'string' ? data.label.trim() : data.label,
+  street: typeof data.street === 'string' ? data.street.trim() : data.street,
+  city: typeof data.city === 'string' ? data.city.trim() : data.city,
+  state: typeof data.state === 'string' ? data.state.trim() : data.state,
+  zipCode: typeof data.zipCode === 'string' ? data.zipCode.trim() : data.zipCode,
+  country: typeof data.country === 'string' ? data.country.trim() : data.country,
+  isDefault: parseBoolean(data.isDefault)
+});
+
+const validateAddress = (data, requireAll = false) => {
+  const errors = [];
+  const allowedLabels = ['Home', 'Office', 'Other'];
+
+  const checkRequired = (value) => value !== undefined && value !== null && value !== '';
+
+  const checkString = (field, value, min, max) => {
+    if (typeof value !== 'string') {
+      errors.push(`${field} must be a string`);
+      return;
+    }
+    if (value.length < min) {
+      errors.push(`${field} must be at least ${min} characters`);
+    }
+    if (value.length > max) {
+      errors.push(`${field} must be under ${max} characters`);
+    }
+  };
+
+  if (requireAll || checkRequired(data.label)) {
+    if (!allowedLabels.includes(data.label)) {
+      errors.push('Label must be Home, Office, or Other');
+    }
+  } else if (requireAll) {
+    errors.push('Label is required');
+  }
+
+  if (requireAll || checkRequired(data.street)) {
+    checkString('Street', data.street, 5, 120);
+  } else if (requireAll) {
+    errors.push('Street is required');
+  }
+
+  if (requireAll || checkRequired(data.city)) {
+    checkString('City', data.city, 2, 60);
+  } else if (requireAll) {
+    errors.push('City is required');
+  }
+
+  if (requireAll || checkRequired(data.state)) {
+    checkString('State', data.state, 2, 60);
+  } else if (requireAll) {
+    errors.push('State is required');
+  }
+
+  if (requireAll || checkRequired(data.zipCode)) {
+    if (typeof data.zipCode !== 'string') {
+      errors.push('ZIP code must be a string');
+    } else if (!/^\d{5,6}$/.test(data.zipCode)) {
+      errors.push('ZIP code must be 5-6 digits');
+    }
+  } else if (requireAll) {
+    errors.push('ZIP code is required');
+  }
+
+  if (requireAll || checkRequired(data.country)) {
+    checkString('Country', data.country, 2, 60);
+  } else if (requireAll) {
+    errors.push('Country is required');
+  }
+
+  if (data.isDefault === null) {
+    errors.push('isDefault must be true or false');
+  }
+
+  return errors;
+};
+
 exports.getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id)
@@ -24,11 +110,10 @@ exports.getProfile = async (req, res) => {
 // ADDRESS MANAGEMENT - ADD ADDRESS
 exports.addAddress = async (req, res) => {
   try {
-    const { label, street, city, state, zipCode, country, isDefault } = req.body;
-
-    // Validate required fields
-    if (!label || !street || !city || !state || !zipCode || !country) {
-      return res.status(400).json({ message: 'All address fields are required' });
+    const normalized = normalizeAddressFields(req.body);
+    const errors = validateAddress(normalized, true);
+    if (errors.length > 0) {
+      return res.status(400).json({ message: 'Invalid address details', errors });
     }
 
     const user = await User.findById(req.user.id);
@@ -37,7 +122,7 @@ exports.addAddress = async (req, res) => {
     }
 
     // First address is always default, or if explicitly marked as default
-    const shouldBeDefault = user.addresses.length === 0 || isDefault;
+    const shouldBeDefault = user.addresses.length === 0 || normalized.isDefault;
 
     // If marking as default, unset default from all others
     if (shouldBeDefault) {
@@ -45,12 +130,12 @@ exports.addAddress = async (req, res) => {
     }
 
     const newAddress = {
-      label,
-      street: street.trim(),
-      city: city.trim(),
-      state: state.trim(),
-      zipCode: zipCode.trim(),
-      country: country.trim() || 'India',
+      label: normalized.label,
+      street: normalized.street,
+      city: normalized.city,
+      state: normalized.state,
+      zipCode: normalized.zipCode,
+      country: normalized.country || 'India',
       isDefault: shouldBeDefault,
       createdAt: new Date()
     };
@@ -92,7 +177,11 @@ exports.getAddresses = async (req, res) => {
 exports.updateAddress = async (req, res) => {
   try {
     const { addressId } = req.params;
-    const { label, street, city, state, zipCode, country, isDefault } = req.body;
+    const normalized = normalizeAddressFields(req.body);
+    const errors = validateAddress(normalized, false);
+    if (errors.length > 0) {
+      return res.status(400).json({ message: 'Invalid address details', errors });
+    }
 
     const user = await User.findById(req.user.id);
     if (!user) {
@@ -104,16 +193,23 @@ exports.updateAddress = async (req, res) => {
       return res.status(404).json({ message: 'Address not found' });
     }
 
-    // Update fields
-    if (label) address.label = label;
-    if (street) address.street = street.trim();
-    if (city) address.city = city.trim();
-    if (state) address.state = state.trim();
-    if (zipCode) address.zipCode = zipCode.trim();
-    if (country) address.country = country.trim();
+    const hasUpdates = ['label', 'street', 'city', 'state', 'zipCode', 'country'].some(
+      (field) => normalized[field] !== undefined
+    ) || normalized.isDefault !== undefined;
+
+    if (!hasUpdates) {
+      return res.status(400).json({ message: 'No valid address fields provided' });
+    }
+
+    if (normalized.label !== undefined) address.label = normalized.label;
+    if (normalized.street !== undefined) address.street = normalized.street;
+    if (normalized.city !== undefined) address.city = normalized.city;
+    if (normalized.state !== undefined) address.state = normalized.state;
+    if (normalized.zipCode !== undefined) address.zipCode = normalized.zipCode;
+    if (normalized.country !== undefined) address.country = normalized.country;
 
     // Handle default address
-    if (isDefault) {
+    if (normalized.isDefault) {
       user.addresses.forEach(addr => addr.isDefault = false);
       address.isDefault = true;
     }
