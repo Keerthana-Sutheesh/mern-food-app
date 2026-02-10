@@ -21,7 +21,9 @@ app.use(cors({
     'http://localhost:3000',
     'https://mern-onlinefood.netlify.app'
   ],
-  credentials: true
+  credentials: true,
+  allowedHeaders: ["Content-Type", "Authorization"],
+  exposedHeaders: ["Authorization"]
 }));
 
 connectDB();
