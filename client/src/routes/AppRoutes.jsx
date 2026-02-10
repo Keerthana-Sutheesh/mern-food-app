@@ -17,6 +17,8 @@ import Profile from "../pages/Profile";
 import OrderHistory from "../pages/OrderHistory";
 import OrderDetails from "../pages/OrderDetails";
 import Favorites from "../pages/Favorites";
+import PaymentSuccess from "../pages/PaymentSuccess";
+import PaymentCancel from "../pages/PaymentCancel";
 
 export default function AppRoutes() {
   return (
@@ -86,6 +88,9 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
+
+      <Route path="/payment/success" element={<PaymentSuccess />} />
+      <Route path="/payment/cancel" element={<PaymentCancel />} />
 
       <Route
         path="/profile"

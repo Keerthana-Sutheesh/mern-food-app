@@ -13,6 +13,7 @@ export function useOrderPlacement({ cartItems, clearCart, navigate, payOnline })
     deliveryNotes,
     savePaymentMethod
   }) => {
+    console.log("useOrderPlacement called with paymentMethod:", paymentMethod);
     if (!user || !cartItems.length) return;
 
     const restaurantId = cartItems[0].restaurant;
@@ -25,6 +26,7 @@ export function useOrderPlacement({ cartItems, clearCart, navigate, payOnline })
     });
 
     const order = orderRes.data.order;
+    console.log("Order created:", order._id, "Payment method:", paymentMethod);
 
     await createDeliverySchedule({
       orderId: order._id,
@@ -36,8 +38,10 @@ export function useOrderPlacement({ cartItems, clearCart, navigate, payOnline })
     });
 
     if (paymentMethod === "ONLINE") {
+      console.log("Initiating online payment for order:", order._id);
       await payOnline({ orderId: order._id, savePaymentMethod });
     } else {
+      console.log("COD order - clearing cart and navigating");
       clearCart();
       navigate(`/orders/${order._id}`);
     }

@@ -44,6 +44,28 @@ Backend
 - Approve restaurants
 - Manage users and orders
 
+## Demo Credentials
+
+### User Accounts
+- **Email:** user@test.com
+- **Password:** user123
+
+- **Email:** user1@test.com  
+- **Password:** user1123
+
+### Restaurant Owner Accounts
+- **Email:** owner@test.com
+- **Password:** owner123
+
+- **Email:** owner1@test.com
+- **Password:** owner1123
+
+### Admin Account
+- **Email:** admin@test.com
+- **Password:** admin123
+
+---
+
 ## Environment Variables
 
 
@@ -52,10 +74,12 @@ Backend
 PORT=8000
 MONGO_URI=your_mongodb_atlas_url
 JWT_SECRET=your_jwt_secret
+RAZORPAY_KEY_ID=your_razorpay_key_id
+RAZORPAY_KEY_SECRET=your_razorpay_key_secret
 
 ### Client (client/.env)
 
-VITE_API_BASE_URL=http://localhost:8000/api
+VITE_API_URL=http://localhost:8000/api
 
 ---
 
@@ -81,7 +105,17 @@ VITE_API_BASE_URL=http://localhost:8000/api
 - Option to add new address inline
 - Falls back to manual address input if no saved addresses
 
+---
 
+## Razorpay Payments
+### Features
+- Razorpay Checkout modal for online payments
+- Server-side order creation and signature verification
+- Refund support via Razorpay APIs
+
+### Setup
+1. Add Razorpay keys to server .env 
+2. Used Razorpay test keys for local testing.
 
 ## Getting Started
 

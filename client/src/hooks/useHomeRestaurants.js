@@ -32,9 +32,12 @@ export function useHomeRestaurants(user) {
       const apiParams = {
         ...params,
         cuisine: params.selectedCuisine,
-        selectedCuisine: undefined
+        search: params.searchTerm,
+        selectedCuisine: undefined,
+        searchTerm: undefined
       };
       delete apiParams.selectedCuisine;
+      delete apiParams.searchTerm;
 
       const res = await getRestaurants(apiParams);
       const data = res.data.data;

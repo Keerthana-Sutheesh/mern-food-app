@@ -17,6 +17,8 @@ const AddressManager = () => {
     country: 'India',
     isDefault: false
   });
+  const [formErrors, setFormErrors] = useState({});
+  const [submitError, setSubmitError] = useState('');
 
 
   useEffect(() => {
@@ -32,12 +34,80 @@ const AddressManager = () => {
     }
   };
 
+  const normalizeFormData = (data) => ({
+    ...data,
+    label: (data.label || '').trim(),
+    street: (data.street || '').trim(),
+    city: (data.city || '').trim(),
+    state: (data.state || '').trim(),
+    zipCode: (data.zipCode || '').trim(),
+    country: (data.country || '').trim()
+  });
+
+  const validateForm = (data) => {
+    const errors = {};
+    const allowedLabels = ['Home', 'Office', 'Other'];
+
+    if (!data.label || !allowedLabels.includes(data.label)) {
+      errors.label = 'Please select a valid address label';
+    }
+    
+    if (!data.street) {
+      errors.street = 'Street address is required';
+    } else if (data.street.length < 5) {
+      errors.street = 'Street address must be at least 5 characters';
+    } else if (data.street.length > 120) {
+      errors.street = 'Street address must be under 120 characters';
+    }
+    
+    if (!data.city) {
+      errors.city = 'City is required';
+    } else if (data.city.length < 2) {
+      errors.city = 'City must be at least 2 characters';
+    } else if (data.city.length > 60) {
+      errors.city = 'City must be under 60 characters';
+    }
+    
+    if (!data.state) {
+      errors.state = 'State is required';
+    } else if (data.state.length < 2) {
+      errors.state = 'State must be at least 2 characters';
+    } else if (data.state.length > 60) {
+      errors.state = 'State must be under 60 characters';
+    }
+    
+    if (!data.zipCode) {
+      errors.zipCode = 'ZIP code is required';
+    } else if (!/^\d{5,6}$/.test(data.zipCode)) {
+      errors.zipCode = 'ZIP code must be 5-6 digits';
+    }
+    
+    if (!data.country) {
+      errors.country = 'Country is required';
+    } else if (data.country.length < 2) {
+      errors.country = 'Country must be at least 2 characters';
+    } else if (data.country.length > 60) {
+      errors.country = 'Country must be under 60 characters';
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+    
+    // Clear error for this field when user starts typing
+    if (formErrors[name]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
   };
 
   const resetForm = () => {
@@ -50,28 +120,38 @@ const AddressManager = () => {
       country: 'India',
       isDefault: false
     });
+    setFormErrors({});
+    setSubmitError('');
     setEditingId(null);
     setShowForm(false);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitError('');
+    const normalized = normalizeFormData(formData);
+
+    if (!validateForm(normalized)) {
+      return;
+    }
+    
     setLoading(true);
 
     try {
-      if (editingId) 
-        {
-        await api.put(`/users/addresses/${editingId}`, formData);
+      if (editingId) {
+        await api.put(`/users/addresses/${editingId}`, normalized);
         console.log('Address updated successfully');
       } else {
-        await api.post('/users/addresses', formData);
+        await api.post('/users/addresses', normalized);
         console.log('Address added successfully');
       }
       
       await fetchAddresses();
       resetForm();
     } catch (error) {
-      console.error('Error saving address:', error.response?.data?.message || error.message);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to save address';
+      setSubmitError(errorMessage);
+      console.error('Error saving address:', error);
     } finally {
       setLoading(false);
     }
@@ -136,6 +216,9 @@ const AddressManager = () => {
                   <option value="Office">🏢 Office</option>
                   <option value="Other">📍 Other</option>
                 </select>
+                {formErrors.label && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{formErrors.label}</p>
+                )}
               </div>
 
               <div>
@@ -148,6 +231,9 @@ const AddressManager = () => {
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors"
                   required
                 />
+                {formErrors.country && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{formErrors.country}</p>
+                )}
               </div>
             </div>
 
@@ -159,9 +245,16 @@ const AddressManager = () => {
                 value={formData.street}
                 onChange={handleInputChange}
                 placeholder="e.g., 123 Main Street, Apartment 4B"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors ${
+                  formErrors.street 
+                    ? 'border-red-500 bg-red-50 dark:bg-red-900/20' 
+                    : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-600 text-gray-900 dark:text-white'
+                }`}
                 required
               />
+              {formErrors.street && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{formErrors.street}</p>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -172,9 +265,16 @@ const AddressManager = () => {
                   name="city"
                   value={formData.city}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors"
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors ${
+                    formErrors.city 
+                      ? 'border-red-500 bg-red-50 dark:bg-red-900/20' 
+                      : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-600 text-gray-900 dark:text-white'
+                  }`}
                   required
                 />
+                {formErrors.city && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{formErrors.city}</p>
+                )}
               </div>
 
               <div>
@@ -184,9 +284,16 @@ const AddressManager = () => {
                   name="state"
                   value={formData.state}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors"
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors ${
+                    formErrors.state 
+                      ? 'border-red-500 bg-red-50 dark:bg-red-900/20' 
+                      : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-600 text-gray-900 dark:text-white'
+                  }`}
                   required
                 />
+                {formErrors.state && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{formErrors.state}</p>
+                )}
               </div>
 
               <div>
@@ -196,9 +303,16 @@ const AddressManager = () => {
                   name="zipCode"
                   value={formData.zipCode}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors"
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors ${
+                    formErrors.zipCode 
+                      ? 'border-red-500 bg-red-50 dark:bg-red-900/20' 
+                      : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-600 text-gray-900 dark:text-white'
+                  }`}
                   required
                 />
+                {formErrors.zipCode && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{formErrors.zipCode}</p>
+                )}
               </div>
             </div>
 
@@ -215,6 +329,12 @@ const AddressManager = () => {
                 ⭐ Set as default address
               </label>
             </div>
+
+            {submitError && (
+              <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                <p className="text-sm text-red-600 dark:text-red-400 font-medium">❌ {submitError}</p>
+              </div>
+            )}
 
             <div className="flex gap-3 pt-4">
               <button
